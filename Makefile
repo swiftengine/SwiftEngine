@@ -1,17 +1,18 @@
 swift_version = 4.1.3
 UNAME = $(shell uname)
 TMP_DIR = /tmp
+swift = /opt/apple/swift-latest/usr/bin/swift
 
 
 default: build
 
 build:
-	swift build --product SECore
-	swift build --product SEProcessor
-	swift build --product SwiftEngine
+	$(swift) build --product SECore
+	$(swift) build --product SEProcessor
+	$(swift) build --product SwiftEngine
 
 run:
-	swift run SwiftEngine
+	$(swift) run SwiftEngine
 
 install-dependencies:
 ifeq ($(UNAME), Linux)
@@ -23,7 +24,7 @@ else
 endif
 
 install-dependencies-mac: cleanup-mac
-	#curl https://swift.org/builds/swift-$(swift_version)-release/xcode/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-osx.pkg --output $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
+	curl https://swift.org/builds/swift-$(swift_version)-release/xcode/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-osx.pkg --output $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	pkgutil --expand $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	mkdir -p  $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx
 	(cd $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx && ( cat ../swift-$(swift_version)-RELEASE-osx.unpkg/swift-$(swift_version)-RELEASE-osx-package.pkg/Payload | gzip -d | cpio -id )) 
@@ -36,7 +37,7 @@ install-dependencies-mac: cleanup-mac
 	make cleanup-mac
 
 cleanup-mac:
-	#rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
+	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx
 	
