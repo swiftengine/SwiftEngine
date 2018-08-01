@@ -2,7 +2,7 @@ swift_version = 4.1.3
 UNAME = $(shell uname)
 TMP_DIR = /tmp
 swift = /opt/apple/swift-latest/usr/bin/swift
-
+runner = $(shell whoami)
 
 default: build
 
@@ -12,15 +12,20 @@ build:
 	$(swift) build --product SwiftEngine
 
 run:
+	echo $(sudo_required)
 	$(swift) run SwiftEngine
 
 install-dependencies:
+ifneq ($(runner), root)
+	echo "Must run as root user"
+else
 ifeq ($(UNAME), Linux)
 	echo "Linux Installer not implemented"
 else ifeq ($(UNAME), Darwin)
 	make install-dependencies-mac
 else
 	echo "$(UNAME) platform is not currently supported"
+endif
 endif
 
 install-dependencies-mac: cleanup-mac
