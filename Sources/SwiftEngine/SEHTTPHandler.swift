@@ -21,8 +21,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     
 
     public init(fileIO: NonBlockingFileIO, htdocsPath: String,
-                documentRoot: String = "/Users/Brandon",
-                pathToSEProcessor: String = "/Users/Brandon/Documents/Code/SwiftEngine/se2_seprocessor/.build/x86_64-apple-macosx10.10/debug/SEProcessor") {
+                documentRoot: String = "/var/swiftengine/www",
+                pathToSEProcessor: String = "/usr/bin/SEProcessor") {
         self.fileIO = fileIO
         self.htdocsPath = htdocsPath
         self.documentRoot = documentRoot
@@ -77,7 +77,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                             "GATEWAY_INTERFACE" : "CGI/1.1",
                             "SCRIPT_FILENAME" : "\(self.documentRoot)" + "\(scriptName)",
                             "SERVER_PROTOCOL" : "HTTP/1.1",
-                            "SERVER_NAME" : "localhost"
+                            "SERVER_NAME" : "localhost",
+                            
             ]
             
             
@@ -107,11 +108,22 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                     envVars["REMOTE_PORT"] = "\(port)"
                 }
             }
-            
+
             //self.printEnvVars(envVars)
+            var args = [String]()
+            if let seProcessorLocation = ProcessInfo.processInfo.environment["SEPROCESSOR_LOCATION"] {
+                args.append(seProcessorLocation)
+            }
+            else {
+                args.append(self.pathToSEProcessor)
+            }
+            
+            if let seCoreLocation = ProcessInfo.processInfo.environment["SECORE_LOCATION"] {
+                args.append(seCoreLocation)
+            }
             
             // Run it
-            var (stdOut, _, _) = SEShell.run([self.pathToSEProcessor], envVars: envVars)
+            var (stdOut, _, _) = SEShell.run(args, envVars: envVars)
             
             // Write it out
             var buf = ctx.channel.allocator.buffer(capacity: stdOut.utf8.count)

@@ -12,19 +12,18 @@ build:
 	$(swift) build --product SwiftEngine
 
 run:
-	echo $(sudo_required)
 	$(swift) run SwiftEngine
 
 install-dependencies:
 ifneq ($(runner), root)
-	echo "Must run as root user"
+	@echo "Must run as root user"
 else
 ifeq ($(UNAME), Linux)
-	echo "Linux Installer not implemented"
+	@echo "Linux Installer not implemented"
 else ifeq ($(UNAME), Darwin)
 	make install-dependencies-mac
 else
-	echo "$(UNAME) platform is not currently supported"
+	@echo "$(UNAME) platform is not currently supported"
 endif
 endif
 
@@ -39,6 +38,8 @@ install-dependencies-mac: cleanup-mac
 	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx/system /opt/apple/swift-$(swift_version)/system
 	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx/Developer /opt/apple/swift-$(swift_version)/Developer
 	ln -s /opt/apple/swift-$(swift_version) /opt/apple/swift-latest
+	mkdir -p /etc/swiftengine
+	mv Templates/etc/swiftengine/* /etc/swiftengine/
 	make cleanup-mac
 
 cleanup-mac:

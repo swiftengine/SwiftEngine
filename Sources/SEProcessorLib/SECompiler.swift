@@ -6,12 +6,11 @@ public class SECompiler {
 	static let swift = "/opt/apple/swift/latest/usr/bin/swift"
     
     // Location of the main.swift file
-    static let seMain = "/Users/Brandon/main.swift"
+    static let seMain = "/etc/swiftengine/magic/main.swift"
     
     // Path to the SECore library
-    static let pathToSECore = "/Users/Brandon/Documents/Code/SwiftEngine/se2_secore/"
     static var pathToSECoreObjectsList: String {
-        return "\(SECompiler.pathToSECore)objectslist2.txt"
+        return "\(SEGlobals.SECORE_LOCATION)/objectslist.txt"
     }
     
     /*
@@ -33,6 +32,8 @@ public class SECompiler {
     
     // This method is the *only* way to access SECompiler
     public class func excuteRequest(path: String) {
+        print(SEGlobals.SECORE_LOCATION)
+        exit(0)
         // Set executable name
         SECompiler.setPathComponents(forPath: path)
         // Execute request
@@ -44,9 +45,9 @@ public class SECompiler {
         let fullLocationPath = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
         
         var args = [
-			swiftc, "-v", "-g",
+			SECompiler.swiftc, "-v", "-g",
 			"-o", fullLocationPath, // Compile binary to this location
-            "-I", "\(SECompiler.pathToSECore)./.build/release/", // Add path to SECore for search path
+            "-I", "\(SEGlobals.SECORE_LOCATION)./.build/release/", // Add path to SECore for search path
 			"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
         ]
@@ -100,16 +101,16 @@ public class SECompiler {
         let lines = content.components(separatedBy: "\n")
         for (lineNum, line) in lines.enumerated() {
             // Starts with the require key
-            if line.starts(with: SEConstant.REQUIRE_KEY) {
+            if line.starts(with: SEGlobals.REQUIRE_KEY) {
                 
                 // Split components to get the require file name
-                let lineComponents = line.components(separatedBy: SEConstant.REQUIRE_KEY)
+                let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
                 for file in lineComponents {
                     // File isn't empty and it's not in the require list
                     if !file.isEmpty && !SECompiler.requireList.contains(file) {
                         
                         // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
-                        var requirePath = "\(SEConstant.DOCUMENT_ROOT)"
+                        var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
                         if !file.starts(with: "/") {
                             requirePath += "/\(SECompiler.relativePath!)"
                         }
@@ -282,7 +283,7 @@ extension SECompiler {
         // Get executable name
         if let filename = path.split(separator: "/").last, let execName = filename.split(separator: ".").first {
             SECompiler.executableName = String(execName)
-            SECompiler.relativePath = String(path.suffix(from: SEConstant.DOCUMENT_ROOT.endIndex).dropFirst().dropLast("\(execName).swift".count))
+            SECompiler.relativePath = String(path.suffix(from: SEGlobals.DOCUMENT_ROOT.endIndex).dropFirst().dropLast("\(execName).swift".count))
             return
         }
         
