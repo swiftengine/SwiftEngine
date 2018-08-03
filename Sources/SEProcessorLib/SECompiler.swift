@@ -22,7 +22,7 @@ public class SECompiler {
     */
     static var relativePath: String!
     static var executableName: String!
-    static let binaryCompilationLocation = "/var/cache/swiftengine/www/"
+    static let binaryCompilationLocation = "/var/swiftengine/.cache"
     
     static var fullExecutablePath: String {
         return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
@@ -32,12 +32,18 @@ public class SECompiler {
     
     // This method is the *only* way to access SECompiler
     public class func excuteRequest(path: String) {
-        print(SEGlobals.SECORE_LOCATION)
-        exit(0)
         // Set executable name
         SECompiler.setPathComponents(forPath: path)
         // Execute request
         SECompiler._excuteRequest(path: path)
+    }
+
+     class func dump(_ str: String, _ doExit: Bool = false){
+        print(str)
+        if(doExit){
+            exit(0)
+        }
+        
     }
 	
     private class func compileFile(fileUri : String) {
@@ -51,6 +57,7 @@ public class SECompiler {
 			"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
         ]
+        
         
         do {
             let contents = try SECompiler.getFileContents(path: fileUri)
@@ -265,7 +272,7 @@ public class SECompiler {
 extension SECompiler {
     
     private class func _excuteRequest(path: String) {
-        
+
         //SECompiler.compileFile(fileUri: path)
         
         // Check if binary if current; if not, compile file

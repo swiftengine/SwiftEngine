@@ -56,7 +56,10 @@ install-dependencies-mac:
 	mkdir -p /var/swiftengine/www
 	if [ ! -d "/var/swiftengine/www" ]; then \
 		cp -R Extra/templates//var/swiftengine/www/* /var/swiftengine/www/; \
+		chmod a+w /var/swiftengine/www; \
 	fi
+	mkdir -p /var/swiftengine/.cache
+	chmod a+w /var/swiftengine/.cache
 	make cleanup-mac
 
 cleanup-mac:
