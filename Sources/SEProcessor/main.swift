@@ -10,7 +10,7 @@ func main(){
         SEGlobals.SECORE_LOCATION = seCoreLocation
     }
     
-    
+   
     let seRoute = SERoute()
     let seResponse = SEResponse()
     if seRoute.doesRouterExist() {

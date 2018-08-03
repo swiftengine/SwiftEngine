@@ -3,16 +3,28 @@ UNAME = $(shell uname)
 TMP_DIR = /tmp
 swift = /opt/apple/swift-latest/usr/bin/swift
 runner = $(shell whoami)
+pwd = $(shell pwd)
 
 default: build
 
-build:
-	$(swift) build --product SECore
+build: build-swiftengineserver build-seprocessor build-swiftengine
+
+run: build
+	SEPROCESSOR_LOCATION=$(pwd)/.build/debug/SEProcessor \
+	SECORE_LOCATION=$(pwd)/.build/debug/SwiftEngine \
+	$(swift) run SwiftEngineServer
+
+
+build-swiftengineserver:
+	$(swift) build --product SwiftEngineServer
+
+build-seprocessor:
 	$(swift) build --product SEProcessor
+
+build-swiftengine:
 	$(swift) build --product SwiftEngine
 
-run:
-	$(swift) run SwiftEngine
+install-deps: install-dependencies
 
 install-dependencies:
 ifneq ($(runner), root)
@@ -27,7 +39,8 @@ else
 endif
 endif
 
-install-dependencies-mac: cleanup-mac
+install-dependencies-mac: 
+	make cleanup-mac
 	curl https://swift.org/builds/swift-$(swift_version)-release/xcode/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-osx.pkg --output $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	pkgutil --expand $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	mkdir -p  $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx
@@ -39,7 +52,11 @@ install-dependencies-mac: cleanup-mac
 	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx/Developer /opt/apple/swift-$(swift_version)/Developer
 	ln -s /opt/apple/swift-$(swift_version) /opt/apple/swift-latest
 	mkdir -p /etc/swiftengine
-	mv Templates/etc/swiftengine/* /etc/swiftengine/
+	cp -R Extra/templates/etc/swiftengine/* /etc/swiftengine/
+	mkdir -p /var/swiftengine/www
+	if [ ! -d "/var/swiftengine/www" ]; then \
+		cp -R Extra/templates//var/swiftengine/www/* /var/swiftengine/www/; \
+	fi
 	make cleanup-mac
 
 cleanup-mac:

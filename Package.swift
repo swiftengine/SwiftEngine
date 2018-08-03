@@ -8,14 +8,14 @@ let package = Package(
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .executable(
-            name: "SwiftEngine",
-            targets: ["SwiftEngine"]),
+            name: "SwiftEngineServer",
+            targets: ["SwiftEngineServer"]),
         .executable(
             name: "SEProcessor",
             targets: ["SEProcessor"]),
         .library(
-            name: "SECore",
-            targets: ["SECore"]),
+            name: "SwiftEngine",
+            targets: ["SwiftEngine"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -25,7 +25,7 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
-            name: "SwiftEngine",
+            name: "SwiftEngineServer",
             dependencies: ["NIO", "NIOHTTP1"]), 
         .target(
             name: "SEProcessor",
@@ -34,23 +34,23 @@ let package = Package(
 			name: "SEProcessorLib",
 			dependencies: []),
         .target(
-            name: "SECore",
+            name: "SwiftEngine",
             dependencies: [
 //				"SwiftyJSON",
 //				"MongoKitten"//, "ExtendedJSON"
             ]),
 
         .testTarget(
-            name: "SwiftEngineTests",
-            dependencies: ["SwiftEngine"]),
+            name: "SwiftEngineServerTests",
+            dependencies: ["SwiftEngineServer"]),
         .testTarget(
             name: "SEProcessorLibTests",
-            dependencies: ["SwiftEngine"]),
+            dependencies: ["SwiftEngineServer"]),
         .testTarget(
             name: "SEProcessorTests",
-            dependencies: ["SwiftEngine"]),
+            dependencies: ["SwiftEngineServer"]),
         .testTarget(
-            name: "SECoreTests",
-            dependencies: ["SwiftEngine"]),
+            name: "SwiftEngineTests",
+            dependencies: ["SwiftEngineServer"]),
     ]
 )
