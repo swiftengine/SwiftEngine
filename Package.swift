@@ -15,6 +15,7 @@ let package = Package(
             targets: ["SEProcessor"]),
         .library(
             name: "SwiftEngine",
+            type: .dynamic, //type: .static,
             targets: ["SwiftEngine"]),
     ],
     dependencies: [

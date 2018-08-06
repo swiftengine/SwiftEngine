@@ -2,8 +2,8 @@ import Foundation
 
 public class SECompiler {
     
-    static let swiftc = "/opt/apple/swift/latest/usr/bin/swiftc"
-	static let swift = "/opt/apple/swift/latest/usr/bin/swift"
+    static let swiftc = "/opt/apple/swift-latest/usr/bin/swiftc"
+	static let swift = "/opt/apple/swift-latest/usr/bin//swift"
     
     // Location of the main.swift file
     static let seMain = "/etc/swiftengine/magic/main.swift"
@@ -53,7 +53,7 @@ public class SECompiler {
         var args = [
 			SECompiler.swiftc, "-v", "-g",
 			"-o", fullLocationPath, // Compile binary to this location
-            "-I", "\(SEGlobals.SECORE_LOCATION)./.build/release/", // Add path to SECore for search path
+            "-I", "\(SEGlobals.SECORE_LOCATION)", // Add path to SECore for search path
 			"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
         ]
@@ -77,6 +77,7 @@ public class SECompiler {
         let seCoreObjects = SECompiler.getSECoreObjectsList()
         args.append(contentsOf: seCoreObjects)
 
+        SECompiler.dump("\(args.joined(separator: " "))", true)
 
 		// Run the executable
         let (_, stdErr, status) = SEShell.run(args)
@@ -279,6 +280,7 @@ extension SECompiler {
         if !SECompiler.isBinaryCurrent() {
             SECompiler.compileFile(fileUri: path)
         }
+
         
         // Execute the binary
         SEShell.runBinary(fullExecutablePath)
