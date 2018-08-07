@@ -13,10 +13,6 @@ let package = Package(
         .executable(
             name: "SEProcessor",
             targets: ["SEProcessor"]),
-        .library(
-            name: "SwiftEngine",
-            type: .dynamic, //type: .static,
-            targets: ["SwiftEngine"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -34,12 +30,6 @@ let package = Package(
 		.target(
 			name: "SEProcessorLib",
 			dependencies: []),
-        .target(
-            name: "SwiftEngine",
-            dependencies: [
-//				"SwiftyJSON",
-//				"MongoKitten"//, "ExtendedJSON"
-            ]),
 
         .testTarget(
             name: "SwiftEngineServerTests",
@@ -49,9 +39,6 @@ let package = Package(
             dependencies: ["SwiftEngineServer"]),
         .testTarget(
             name: "SEProcessorTests",
-            dependencies: ["SwiftEngineServer"]),
-        .testTarget(
-            name: "SwiftEngineTests",
             dependencies: ["SwiftEngineServer"]),
     ]
 )
