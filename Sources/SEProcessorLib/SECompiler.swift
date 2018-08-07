@@ -25,7 +25,7 @@ public class SECompiler {
     static let binaryCompilationLocation = "/var/swiftengine/.cache"
     
     static var fullExecutablePath: String {
-        return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
+        return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)/\(SECompiler.executableName!)"
     }
     
     static var requireList: Set<String> = []
@@ -47,6 +47,8 @@ public class SECompiler {
     }
 	
     private class func compileFile(fileUri : String) {
+        
+        //dump("Binary Location: \(binaryCompilationLocation)\nRelative Path: \(relativePath!)\nExecutable: \(executableName!)\nFull exe path: \(fullExecutablePath)", true)
         
         var args = [
 			SECompiler.swiftc, 
@@ -297,10 +299,10 @@ extension SECompiler {
     
     
     private class func setPathComponents(forPath path: String) {
-        // Get executable name
-        if let filename = path.split(separator: "/").last, let execName = filename.split(separator: ".").first {
-            SECompiler.executableName = String(execName)
-            SECompiler.relativePath = String(path.suffix(from: SEGlobals.DOCUMENT_ROOT.endIndex).dropFirst().dropLast("\(execName).swift".count))
+        // Get executable name and relative path
+        if let filename = path.components(separatedBy: "/").last, let execName = filename.components(separatedBy: ".").first {
+            SECompiler.executableName = execName
+            SECompiler.relativePath = String(path.dropFirst(SEGlobals.DOCUMENT_ROOT.count).dropLast("/\(filename)".count))
             return
         }
         

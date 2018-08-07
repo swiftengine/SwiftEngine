@@ -2,13 +2,13 @@
 
 open class RequestContext {
     
-    private (set) public var request : Request! = nil
-    private (set) public var response : Response! = nil
+    lazy private (set) public var request: Request = Request(ctx: self)
+    lazy private (set) public var response: Response = Response(ctx: self)
     public var requestHandlers = [RequestHandler]()
     
+    
     public init() {
-        request = Request(ctx: self)
-        response = Response(ctx: self)
+        
     }
     
     // url route format users/:userid/books
