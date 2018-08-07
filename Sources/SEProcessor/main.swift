@@ -3,14 +3,20 @@ import SEProcessorLib
 
 func main(){
     let environment = ProcessInfo.processInfo.environment
-    let fileRequest = environment["SCRIPT_NAME"]!
-    guard let documentRoot = environment["DOCUMENT_ROOT"] else { return }
+    
+    guard let documentRoot = environment["DOCUMENT_ROOT"] else {
+        print("No document root")
+        exit(0)
+    }
+    guard let fileRequest = environment["SCRIPT_NAME"] else {
+        print("No script name")
+        exit(0)
+    }
     SEGlobals.DOCUMENT_ROOT = documentRoot
     if let seCoreLocation = getArg("secore-location") {
         SEGlobals.SECORE_LOCATION = seCoreLocation
     }
     
-   
     let seRoute = SERoute()
     let seResponse = SEResponse()
     if seRoute.doesRouterExist() {
