@@ -3,7 +3,7 @@ import Foundation
 public class SECompiler {
     
     static let swiftc = "/opt/apple/swift-latest/usr/bin/swiftc"
-	static let swift = "/opt/apple/swift-latest/usr/bin//swift"
+	static let swift = "/opt/apple/swift-latest/usr/bin/swift"
     
     // Location of the main.swift file
     static let seMain = "/etc/swiftengine/magic/main.swift"
@@ -28,7 +28,7 @@ public class SECompiler {
         return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
     }
     
-    static var requireList: [String] = []
+    static var requireList: Set<String> = []
     
     // This method is the *only* way to access SECompiler
     public class func excuteRequest(path: String) {
@@ -48,14 +48,12 @@ public class SECompiler {
 	
     private class func compileFile(fileUri : String) {
         
-        let fullLocationPath = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
-        
         var args = [
 			SECompiler.swiftc, 
                 "-v", 
                 "-g",
             //"-Xcc", "-num-threads", "-Xcc", "25",
-			"-o", fullLocationPath, // Compile binary to this location
+			"-o", SECompiler.fullExecutablePath, // Compile binary to this location
             "-I", "\(SEGlobals.SECORE_LOCATION)", // Add path to SECore for search path
 			//"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
@@ -69,7 +67,7 @@ public class SECompiler {
 
         do {
             let contents = try SECompiler.getFileContents(path: fileUri)
-            SECompiler.requireList.append(fileUri)
+            SECompiler.requireList.insert(fileUri)
             SECompiler.generateRequireList(path: fileUri, content: contents)
             args.append(contentsOf: SECompiler.requireList)
             
@@ -89,12 +87,12 @@ public class SECompiler {
 
 		// Run the executable
         let newArgs = args //["/usr/bin/env"]
-        let (stdOut, stdErr, status) = SEShell.run(newArgs)
+        let (_, stdErr, status) = SEShell.run(newArgs)
         if (status != 0) {
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
         }
-        
+
 	}
     
     
@@ -103,7 +101,7 @@ public class SECompiler {
     private class func getSECoreObjectsList() -> [String] {
         if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
             var ret = [String]()
-            var files = contents.components(separatedBy: "\n")
+            var files = contents.components(separatedBy: .newlines)
             files = files.filter(){ $0 != ""}
             ret.append(contentsOf: files)
             return ret
@@ -116,7 +114,7 @@ public class SECompiler {
     // DFS-search starting with the entry point file to generate the list of required files
     private class func generateRequireList(path: String, content: String) {
         // Get lines of the file
-        let lines = content.components(separatedBy: "\n")
+        let lines = content.components(separatedBy: .newlines)
         for (lineNum, line) in lines.enumerated() {
             // Starts with the require key
             if line.starts(with: SEGlobals.REQUIRE_KEY) {
@@ -135,7 +133,7 @@ public class SECompiler {
                         requirePath += "\(file)"
                         
                         // Add require to the list
-                        SECompiler.requireList.append(requirePath)
+                        SECompiler.requireList.insert(requirePath)
                         
                         do {
                             // Recurse
@@ -156,7 +154,7 @@ public class SECompiler {
     
     
     // Write out the .sources file to the compileBinaryLocation
-    private class func createSourcesFile(requiresList: [String]) {
+    private class func createSourcesFile(requiresList: Set<String>) {
         
         // Get path that is not part of the document root and make dirs for that
         let cacheDir = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)"
