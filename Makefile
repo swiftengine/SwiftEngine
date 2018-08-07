@@ -5,12 +5,12 @@ swift = /opt/apple/swift-latest/usr/bin/swift
 runner = $(shell whoami)
 pwd = $(shell pwd)
 build_dir = $(pwd)/.build
-release_dir = $(build_id)/debug
-SECORE_LOCATION = Extra/SwiftEngineCore/.build/release
+release_dir = $(build_dir)/debug
+SECORE_LOCATION = $(pwd)/Extra/SwiftEngineCore/.build/release
 
 default: build
 
-build: build-swiftengineserver build-seprocessor build-swiftengine
+build: build-swiftengineserver build-seprocessor build-secore
 
 run: build
 	SEPROCESSOR_LOCATION=$(release_dir)/SEProcessor \
@@ -23,13 +23,15 @@ build-swiftengineserver:
 
 build-seprocessor:
 	$(swift) build --product SEProcessor
+	
 
-build-swiftengine:
-	$(swift) build --product SwiftEngine -c release -Xswiftc -g 
-	rm -f $(SECORE_LOCATION)/SEObjects.list
-	find $(release_dir)/SwiftEngine.build -type f \( -name "*.o" ! -iname "main.swift.o" \) -exec basename {} \; >> $(SECORE_LOCATION)/SEObjects.list
-	rm -f $(SECORE_LOCATION)/SEmodulemaps.list
-	find $(release_dir)/SwiftEngine.build -type f -name "*.modulemap" -exec basename {} \; >> $(SECORE_LOCATION)/SEmodulemaps.list
+build-secore:
+	make -C Extra/SwiftEngineCore build
+	#$(swift) build --product SwiftEngine -c release -Xswiftc -g 
+	#rm -f $(SECORE_LOCATION)/SEObjects.list
+	#find $(release_dir)/SwiftEngine.build -type f \( -name "*.o" ! -iname "main.swift.o" \) -exec basename {} \; >> $(SECORE_LOCATION)/SEObjects.list
+	#rm -f $(SECORE_LOCATION)/SEmodulemaps.list
+	#find $(release_dir)/SwiftEngine.build -type f -name "*.modulemap" -exec basename {} \; >> $(SECORE_LOCATION)/SEmodulemaps.list
 	#chown -R www-data:www-data .
 	#find .build/release -type d -name "*.build" -exec chmod -R a+x {} \;
 	#find .build -type d -exec chmod -R a+x {} \;
@@ -63,7 +65,7 @@ endif
 endif
 
 install-dependencies-mac: 
-	make cleanup-mac
+	make install-cleanup
 	curl https://swift.org/builds/swift-$(swift_version)-release/xcode/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-osx.pkg --output $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	pkgutil --expand $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	mkdir -p  $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx

@@ -113,15 +113,18 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             var args = [String]()
             if let seProcessorLocation = ProcessInfo.processInfo.environment["SEPROCESSOR_LOCATION"] {
                 args.append(seProcessorLocation)
+                if !FileManager.default.fileExists(atPath: seProcessorLocation){
+                    print("SEProcessor file does not exist: \(seProcessorLocation)")
+                }
             }
             else {
                 args.append(self.pathToSEProcessor)
             }
             
             if let seCoreLocation = ProcessInfo.processInfo.environment["SECORE_LOCATION"] {
-                args.append(seCoreLocation)
+                args.append("-secore-location=\(seCoreLocation)")
             }
-            
+
             // Run it
             var (stdOut, _, _) = SEShell.run(args, envVars: envVars)
             

@@ -10,7 +10,7 @@ public class SECompiler {
     
     // Path to the SECore library
     static var pathToSECoreObjectsList: String {
-        return "\(SEGlobals.SECORE_LOCATION)/objectslist.txt"
+        return "\(SEGlobals.SECORE_LOCATION)/SEObjects.list"
     }
     
     /*
@@ -51,14 +51,22 @@ public class SECompiler {
         let fullLocationPath = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
         
         var args = [
-			SECompiler.swiftc, "-v", "-g",
+			SECompiler.swiftc, 
+                "-v", 
+                "-g",
+            //"-Xcc", "-num-threads", "-Xcc", "25",
 			"-o", fullLocationPath, // Compile binary to this location
             "-I", "\(SEGlobals.SECORE_LOCATION)", // Add path to SECore for search path
-			"-Xcc", "-v",
+			//"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
         ]
-        
-        
+
+
+        #if os(OSX)
+            args.append("-sdk")
+            args.append("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk")
+        #endif
+
         do {
             let contents = try SECompiler.getFileContents(path: fileUri)
             SECompiler.requireList.append(fileUri)
@@ -74,13 +82,14 @@ public class SECompiler {
         }
         
         // Add SECore objects
-        let seCoreObjects = SECompiler.getSECoreObjectsList()
+        var seCoreObjects = SECompiler.getSECoreObjectsList()
+        seCoreObjects = seCoreObjects.map{ val -> String in "\(SEGlobals.SECORE_LOCATION)/SwiftEngine.build/\(val)"}
         args.append(contentsOf: seCoreObjects)
 
-        SECompiler.dump("\(args.joined(separator: " "))", true)
 
 		// Run the executable
-        let (_, stdErr, status) = SEShell.run(args)
+        let newArgs = args //["/usr/bin/env"]
+        let (stdOut, stdErr, status) = SEShell.run(newArgs)
         if (status != 0) {
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
@@ -94,7 +103,8 @@ public class SECompiler {
     private class func getSECoreObjectsList() -> [String] {
         if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
             var ret = [String]()
-            let files = contents.components(separatedBy: "\n")
+            var files = contents.components(separatedBy: "\n")
+            files = files.filter(){ $0 != ""}
             ret.append(contentsOf: files)
             return ret
         }

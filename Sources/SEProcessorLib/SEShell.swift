@@ -34,9 +34,18 @@ class SEShell {
         task.standardError = pipeStdErr
         
         //var envShell = ProcessInfo.processInfo.environment
-        //task.environment = envShell
-		task.launchPath = "/usr/bin/env"
-		task.arguments = args
+        let env = [
+                    // "TMPDIR": "/var/folders/44/xm15b4ks6dv8xn07w62cf2nw0000gn/T/",
+                    // "SDKROOT":"",
+                    "PATH":"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+                    // "PWD":"/tmp",
+
+                ]
+        task.environment = env
+        var vArgs = args
+		task.launchPath = vArgs[0] //"/usr/bin/env"
+        vArgs.remove(at:0)
+		task.arguments = vArgs
 		task.launch()
 		task.waitUntilExit()
         
