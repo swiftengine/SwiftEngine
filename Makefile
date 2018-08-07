@@ -87,10 +87,8 @@ setup-system:
 	mkdir -p /etc/swiftengine
 	cp -R Extra/templates/etc/swiftengine/* /etc/swiftengine/
 	mkdir -p /var/swiftengine/www
-	if [ ! -d "/var/swiftengine/www" ]; then \
-		cp -R Extra/templates/var/swiftengine/www/* /var/swiftengine/www/; \
-		chmod -R a+w /var/swiftengine/www; \
-	fi
+	chmod -R a+w /var/swiftengine
+	cp -R Extra/templates/var/swiftengine/www/* /var/swiftengine/www/
 	mkdir -p /var/swiftengine/.cache
 	chmod a+w /var/swiftengine/.cache
 
