@@ -38,17 +38,44 @@ public class SECompiler {
         SECompiler._excuteRequest(path: path)
     }
 
-     class func dump(_ str: String, _ doExit: Bool = false){
+    class func dump(_ str: String, _ doExit: Bool = false){
         print(str)
         if(doExit){
             exit(0)
         }
-        
     }
+    
+    // Solely for test purposes; remove before deployment
+    private class func printEnvVars(_ envVars: [String:String]) {
+        let keys = envVars.keys.sorted()
+        var startedHttp = false
+        var finishedHttp = false
+        var startedServer = false
+        dump("\nEnv Vars:")
+        for key in keys {
+            if !startedHttp && key.starts(with: "HTTP") {
+                startedHttp = true
+                dump("")
+            }
+            if startedHttp && !finishedHttp && !key.starts(with: "HTTP") {
+                finishedHttp = true
+                dump("")
+            }
+            else if finishedHttp && !startedServer && key.starts(with: "SERVER") {
+                startedServer = true
+                dump("")
+            }
+            dump("\(key)=\(envVars[key]!)")
+        }
+        dump("", true)
+    }
+    
 	
     private class func compileFile(fileUri : String) {
         
         //dump("Binary Location: \(binaryCompilationLocation)\nRelative Path: \(relativePath!)\nExecutable: \(executableName!)\nFull exe path: \(fullExecutablePath)", true)
+        
+        //SECompiler.printEnvVars(ProcessInfo.processInfo.environment)
         
         var args = [
 			SECompiler.swiftc, 
@@ -123,14 +150,15 @@ public class SECompiler {
                 
                 // Split components to get the require file name
                 let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
+                //dump("\(lineComponents)", true)
                 for file in lineComponents {
                     // File isn't empty and it's not in the require list
-                    if !file.isEmpty && !SECompiler.requireList.contains(file) {
+                    if (!file.isEmpty) && (!SECompiler.requireList.contains(file)) {
                         
                         // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
                         var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
                         if !file.starts(with: "/") {
-                            requirePath += "/\(SECompiler.relativePath!)"
+                            requirePath += "\(SECompiler.relativePath!)"
                         }
                         requirePath += "\(file)"
                         
