@@ -55,7 +55,14 @@ ifneq ($(runner), root)
 	@echo "Must run as root user"
 else
 ifeq ($(UNAME), Linux)
-	@echo "Linux Installer not implemented"
+ifeq ($(shell test "$(shell lsb_release -r -s)" = 14.04  -o  \
+                   "$(shell lsb_release -r -s)" = 16.04  -o  \
+                   "$(shell lsb_release -r -s)" = 16.10  &&  printf "true"),true)
+	make install-dependencies-linux
+	make setup-system
+else
+	@echo This version of Linux is not currently supported, please use Ubuntu 14.04, 16.04 or 16.10
+endif
 else ifeq ($(UNAME), Darwin)
 	make install-dependencies-mac
 	make setup-system
@@ -64,8 +71,23 @@ else
 endif
 endif
 
+
+install-dependencies-linux: 
+	$(eval ubuntu_version = $(shell lsb_release -r -s))
+	$(eval short_ubuntu_version = $(shell echo $(ubuntu_version) | tr --delete .))
+	$(eval swift_download_source = "https://swift.org/builds/swift-$(swift_version)-release/ubuntu$(short_ubuntu_version)/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-ubuntu$(ubuntu_version).tar.gz" )
+	make install-cleanup-ubuntu
+	wget $(swift_download_source) -O $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu.tar.gz
+	mkdir -p $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu 
+	tar -xvzf $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu.tar.gz --directory $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu --strip-components=1
+	rm -rf /opt/apple/swift-$(swift_version)
+	mkdir -p /opt/apple/swift-$(swift_version)
+	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu/usr /opt/apple/swift-$(swift_version)/usr
+	ln -s /opt/apple/swift-$(swift_version) /opt/apple/swift-latest
+	make install-cleanup-ubuntu
+
 install-dependencies-mac: 
-	make install-cleanup
+	make install-cleanup-mac
 	curl https://swift.org/builds/swift-$(swift_version)-release/xcode/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-osx.pkg --output $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	pkgutil --expand $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	mkdir -p  $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx
@@ -76,21 +98,24 @@ install-dependencies-mac:
 	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx/system /opt/apple/swift-$(swift_version)/system
 	mv $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx/Developer /opt/apple/swift-$(swift_version)/Developer
 	ln -s /opt/apple/swift-$(swift_version) /opt/apple/swift-latest
-	make install-cleanup
+	make install-cleanup-mac
 
-install-cleanup:
+install-cleanup-mac:
 	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.pkg
 	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx.unpkg
 	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-osx
 
+install-cleanup-ubuntu:
+	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu.tar.gz
+	rm -rf $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu
+
 setup-system:
 	mkdir -p /etc/swiftengine
 	cp -R Extra/templates/etc/swiftengine/* /etc/swiftengine/
-	mkdir -p /var/swiftengine/www
-	chmod -R a+w /var/swiftengine
+	chmod -R a+w /etc/swiftengine
+	mkdir -p /var/swiftengine/www /var/swiftengine/.cache
 	cp -R Extra/templates/var/swiftengine/www/* /var/swiftengine/www/
-	mkdir -p /var/swiftengine/.cache
-	chmod a+w /var/swiftengine/.cache
+	chmod -R a+w /var/swiftengine
 
 
 
