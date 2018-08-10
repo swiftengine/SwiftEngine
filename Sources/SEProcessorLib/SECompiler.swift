@@ -110,7 +110,7 @@ public class SECompiler {
         
         // Add SECore objects
         var seCoreObjects = SECompiler.getSECoreObjectsList()
-        seCoreObjects = seCoreObjects.map{ val -> String in "\(SEGlobals.SECORE_LOCATION)/SwiftEngine.build/\(val)"}
+        seCoreObjects = seCoreObjects.map{"\(SEGlobals.SECORE_LOCATION)/SwiftEngine.build/\($0)"}
         args.append(contentsOf: seCoreObjects)
 
 
@@ -150,7 +150,6 @@ public class SECompiler {
                 
                 // Split components to get the require file name
                 let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
-                //dump("\(lineComponents)", true)
                 for file in lineComponents {
                     // File isn't empty and it's not in the require list
                     if (!file.isEmpty) && (!SECompiler.requireList.contains(file)) {
@@ -223,11 +222,7 @@ public class SECompiler {
         
         do {
             // Read sources from sourcesFile
-            var sources = [String]()
-            let allSources = try String(contentsOfFile: sourcesFile, encoding: .utf8).split(separator: "\n")
-            for source in allSources {
-                sources.append(String(source))
-            }
+            let sources = try String(contentsOfFile: sourcesFile, encoding: .utf8).components(separatedBy: "\n")
             
             // Get date of .sources file
             let sourcesFileAttrs = try fileManager.attributesOfItem(atPath: SECompiler.fullExecutablePath)
@@ -265,7 +260,7 @@ public class SECompiler {
     
     
 	private class func listOfObjectFiles(baseDir: String) throws -> [String] {
-		let text = try getFileContents(path: baseDir + "/objectslist.txt")
+		let text = try SECompiler.getFileContents(path: baseDir + "/objectslist.txt")
 		// split each line into array item, filter out any empty lines, and append absolute URLs
 		let list = text.components(separatedBy: "\n").filter{$0 != ""}.map{baseDir + "/" + $0}
 		return list
@@ -274,7 +269,7 @@ public class SECompiler {
     
     
 	private class func listOfModulemapFiles(baseDir:String) throws -> [String] {
-		let text = try getFileContents(path: baseDir + "/modulemaplist.txt")
+		let text = try SECompiler.getFileContents(path: baseDir + "/modulemaplist.txt")
 		// split each line into array item, filter out any empty lines, and append absolute URLs
 		let list = text.components(separatedBy: "\n").filter{$0 != ""}.map{baseDir + "/" + $0}
 		return list
@@ -289,7 +284,7 @@ public class SECompiler {
 	
     
     
-	private class func debugOut(_ resp : Any){
+	private class func debugOut(_ resp : Any) {
 		print("Content-type: text/html")
 		print("")
 		print("<pre>")
@@ -300,8 +295,8 @@ public class SECompiler {
     
     
     private class func getErrors(_ error: String) -> String {
-        let arrError = matchError(error)
-        return decoreError(sError: error, errors: arrError)
+        let arrError = SECompiler.matchError(error)
+        return SECompiler.decoreError(sError: error, errors: arrError)
     }
 
 }
@@ -387,20 +382,22 @@ extension SECompiler {
     }
     
     private class func decoreError(sError: String, errors: [NSTextCheckingResult]) -> String {
-        var    output = "<h3>\(errors.count) issue\(errors.count > 1 ? "s" : "") found on this page</h3>"
+        let numErrors = errors.count
+    
+        var output = "<h3>\(numErrors) issue\(numErrors > 1 ? "s" : "") found on this page</h3>"
         
-        for i in 0..<errors.count {
+        for i in 0..<numErrors {
             let error = errors[i]
             output += "<br><br><hr size=1>"
-            output += "<h4>Issue #\(i + 1) : <font color=#dd0000>\(getTagValue(sError, textCheckingResult: error, key: 4)): \(getTagValue(sError, textCheckingResult: error, key: 5))</font> </h4>"
-            output += "In file <b><font color=#dd0000>\(getTagValue(sError, textCheckingResult: error, key: 1))</font></b> on line \(getTagValue(sError, textCheckingResult: error, key: 2))<br>"
+            output += "<h4>Issue #\(i + 1) : <font color=#dd0000>\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 4)): \(SECompiler.getTagValue(sError, textCheckingResult: error, key: 5))</font> </h4>"
+            output += "In file <b><font color=#dd0000>\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 1))</font></b> on line \(SECompiler.getTagValue(sError, textCheckingResult: error, key: 2))<br>"
             output += "<div style=\"margin:5px 0px 15px 0px; font-weight: bold;\">"
-            output += getCodeSnippetFromFile(fileName: getTagValue(sError, textCheckingResult: error, key: 1), lineNo: Int(getTagValue(sError, textCheckingResult: error, key: 2))!)
+            output += SECompiler.getCodeSnippetFromFile(fileName: SECompiler.getTagValue(sError, textCheckingResult: error, key: 1), lineNo: Int(SECompiler.getTagValue(sError, textCheckingResult: error, key: 2))!)
             output += "Compiler diagnostics: "
-            output += "<span style=\"color:#dd0000;\">\(getTagValue(sError, textCheckingResult: error, key: 5)) </span>"
+            output += "<span style=\"color:#dd0000;\">\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 5)) </span>"
             output += "</div>"
             output += "<pre style=\"font-size:.7em\" class=\"language-swift\" ><code>"
-            output += "\(getTagValue(sError, textCheckingResult: error, key: 6))"
+            output += "\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 6))"
             output += "</code></pre>"
         }
         return output
@@ -438,7 +435,8 @@ extension SECompiler {
             }
             output += "</code></pre>"
             return output
-        } catch {
+        }
+        catch {
             
         }
         return ""
