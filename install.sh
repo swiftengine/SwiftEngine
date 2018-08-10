@@ -10,7 +10,7 @@ testcmd () {
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     if testcmd make; then
-	    make install-dependencies-linux
+	    make install-dependencies
     else
         echo "WARNING!"
         echo "This project requires build-essentails tools to be installed."
@@ -18,7 +18,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     if testcmd make; then
-        make install-dependencies-mac
+        make install-dependencies
     elif testcmd xcode-select; then
         echo "WARNING!"
         echo "It looks like you have Xcode installed in your system, but you don't have the Command Line Tools option installed yet."
