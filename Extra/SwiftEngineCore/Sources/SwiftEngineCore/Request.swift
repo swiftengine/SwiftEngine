@@ -7,8 +7,8 @@ public class Request {
 
     unowned let ctx : RequestContext
     
-    public var headers = [String : String]()
-    var server = [String : String]()
+    public var headers = CIDictionary<String, String>()
+    public var server = CIDictionary<String, String>()
     
     public init(ctx: RequestContext) {
         self.ctx = ctx 
@@ -27,3 +27,27 @@ public class Request {
         
 
 }
+
+public typealias CIDictionary = Dictionary
+
+
+public extension CIDictionary where Key == String {
+
+    subscript(caseInsensitive key: Key) -> Value? {
+        get {
+            if let k = keys.first(where: { $0.caseInsensitiveCompare(key) == .orderedSame }) {
+                return self[k]
+            }
+            return nil
+        }
+        set {
+            if let k = keys.first(where: { $0.caseInsensitiveCompare(key) == .orderedSame }) {
+                self[k] = newValue
+            } else {
+                self[key] = newValue
+            }
+        }
+    }
+
+}
+

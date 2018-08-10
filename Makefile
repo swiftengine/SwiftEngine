@@ -73,7 +73,6 @@ endif
 
 
 install-dependencies-linux: 
-	apt-get -y install make
 	$(eval ubuntu_version = $(shell lsb_release -r -s))
 	$(eval short_ubuntu_version = $(shell echo $(ubuntu_version) | tr --delete .))
 	$(eval swift_download_source = "https://swift.org/builds/swift-$(swift_version)-release/ubuntu$(short_ubuntu_version)/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-ubuntu$(ubuntu_version).tar.gz" )
