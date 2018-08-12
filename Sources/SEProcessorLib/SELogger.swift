@@ -12,41 +12,28 @@ class SELogger {
     private static let cal = Calendar(identifier: .gregorian)
     
     
-    public class func log(ip: String, requestStr: String, responseCode: Int, bodyLength: Int) {
-        
+    public class func log(ip: String, requestStr: String, responseCode code: Int, bodyLength length: Int) {
+        let str = "\(ip) - - [\(SELogger.getLogTime())] \"\(requestStr)\" \(code) \(length)"
     }
     
     public class func logError(ip: String, requestStr: String, errorMessage: String) {
-        
+        let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)"
     }
     
     
-    private class func getTime() -> String {
+    // Construct string with time information for access.log entries
+    private class func getLogTime() -> String {
         let now = Date()
-        let dayInt = SELogger.cal.component(.day, from: now)
-        var day: String = "\(dayInt)"
-        if dayInt < 10 {
-            day = "0\(dayInt)"
-        }
-        let month = SELogger.cal.component(.month, from: now).getMonth()
-        let year = SELogger.cal.component(.year, from: now)
-        let hourInt = SELogger.cal.component(.hour, from: now)
-        var hour: String = "\(hourInt)"
-        if hourInt < 10 {
-            hour = "0\(hourInt)"
-        }
-        let minuteInt = SELogger.cal.component(.minute, from: now)
-        var minute: String = "\(minuteInt)"
-        if minuteInt < 10 {
-            minute = "0\(minuteInt)"
-        }
-        let secondInt = SELogger.cal.component(.second, from: now)
-        var second: String = "\(secondInt)"
-        if secondInt < 10 {
-            second = "0\(secondInt)"
-        }
-        let timezone = TimeZone.current.secondsFromGMT() / 60 / 60
         
+        let day = SELogger.getDateComponentWithLengthTwo(.day, ofDate: now)
+        let month = SELogger.getMonth(SELogger.cal.component(.month, from: now))
+        let year = SELogger.cal.component(.year, from: now)
+        
+        let hour = SELogger.getDateComponentWithLengthTwo(.hour, ofDate: now)
+        let minute = SELogger.getDateComponentWithLengthTwo(.minute, ofDate: now)
+        let second = SELogger.getDateComponentWithLengthTwo(.second, ofDate: now)
+        
+        let timezone = TimeZone.current.secondsFromGMT() / 60 / 60
         let timezoneStr: String
         if timezone < 10 && timezone >= 0 {
             timezoneStr = "0\(timezone)00"
@@ -61,20 +48,65 @@ class SELogger {
             timezoneStr = "-\(abs(timezone))00"
         }
         
-        let dateStr = "[\(day)/\(month)/\(year):\(hour):\(minute):\(second) \(timezoneStr)]"
+        let dateStr = "\(day)/\(month)/\(year):\(hour):\(minute):\(second) \(timezoneStr)"
         return dateStr
     }
-
+    
+    private static func getErrorTime() -> String {
+        let now = Date()
+        
+        let dayOfWeek = SELogger.getDay(SELogger.cal.component(.weekday, from: now))
+        let day = SELogger.getDateComponentWithLengthTwo(.day, ofDate: now)
+        let month = SELogger.getMonth(SELogger.cal.component(.month, from: now))
+        
+        let hour = SELogger.getDateComponentWithLengthTwo(.hour, ofDate: now)
+        let minute = SELogger.getDateComponentWithLengthTwo(.minute, ofDate: now)
+        let second = SELogger.getDateComponentWithLengthTwo(.second, ofDate: now)
+        
+        let timezone = TimeZone.current.secondsFromGMT() / 60 / 60
+        let timezoneStr: String
+        if timezone < 10 && timezone >= 0 {
+            timezoneStr = "0\(timezone)00"
+        }
+        else if timezone >= 10 {
+            timezoneStr = "\(timezone)00"
+        }
+        else if timezone < 0 && timezone > -10 {
+            timezoneStr = "-0\(abs(timezone))00"
+        }
+        else {
+            timezoneStr = "-\(abs(timezone))00"
+        }
+        
+        let dateStr = "\(dayOfWeek) \(month) \(day) \(hour):\(minute):\(second) \(timezoneStr)"
+        return dateStr
+    }
     
     
+    // Helper functions for getting pieces of date strings
+    private static func getDateComponentWithLengthTwo(_ dc: Calendar.Component, ofDate date: Date) -> String {
+        let component = SELogger.cal.component(dc, from: date)
+        if component < 10 {
+            return "0\(component)"
+        }
+        return "\(component)"
+    }
     
-}
-
-
-extension Int {
+    private static func getDay(_ dayInt: Int) -> String {
+        switch dayInt {
+        case 1: return "Sun"
+        case 2: return "Mon"
+        case 3: return "Tues"
+        case 4: return "Wed"
+        case 5: return "Thur"
+        case 6: return "Fri"
+        case 7: return "Sat"
+        default: return "Unknown"
+        }
+    }
     
-    func getMonth() -> String {
-        switch self {
+    private static func getMonth(_ monthInt: Int) -> String {
+        switch monthInt {
         case 1: return "Jan"
         case 2: return "Feb"
         case 3: return "Mar"
@@ -90,4 +122,6 @@ extension Int {
         default: return "Unknown"
         }
     }
+    
 }
+
