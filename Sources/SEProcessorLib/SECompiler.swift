@@ -316,7 +316,20 @@ extension SECompiler {
 
         
         // Execute the binary
-        SEShell.runBinary(fullExecutablePath)
+        #if false
+            let (stdOut, stdErr, status) = SEShell.run([fullExecutablePath])
+            if (status != 0) {
+                print(stdErr)
+                // let output = SECompiler.getErrors(stdErr)
+                // SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
+            }
+            print(status)
+            print(stdErr)
+            print(stdOut)
+        #else
+            SEShell.runBinary(fullExecutablePath)
+
+        #endif
         exit(0)
     }
     

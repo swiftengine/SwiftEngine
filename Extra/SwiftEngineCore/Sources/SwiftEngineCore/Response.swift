@@ -35,7 +35,8 @@ public class Response {
         }
         
         if (!httpBodyResponseStarted) {
-            self.responseOut("\r\n")  // this is import; we follow the HTTP protocol standard here for separating header data from body
+            self.responseOut("HTTP/1.1 200 OK\n")
+            self.responseOut("\n")   // this is important; we follow the HTTP protocol standard here for separating header data from body
             httpBodyResponseStarted = true
         }
         

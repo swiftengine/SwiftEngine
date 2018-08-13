@@ -1,6 +1,9 @@
 import Foundation
 import NIO
 import NIOHTTP1 
+import NIOFoundationCompat
+//import Glibc
+//import Darwin
 
 
 public final class SEHTTPHandler: ChannelInboundHandler {
@@ -18,8 +21,12 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     // CGI information
     private let documentRoot: String
     private let pathToSEProcessor: String
-    
 
+    //Request body file handler
+    private var requestId : String!
+    private var requestBodyFilePath : String!
+    private var requestBodyFileHandle : Foundation.FileHandle!//NIO.FileHandle?
+    
     public init(fileIO: NonBlockingFileIO, htdocsPath: String,
                 documentRoot: String = "/var/swiftengine/www",
                 pathToSEProcessor: String = "/usr/bin/SEProcessor") {
@@ -27,6 +34,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         self.htdocsPath = htdocsPath
         self.documentRoot = documentRoot
         self.pathToSEProcessor = pathToSEProcessor
+
+        print("SEHTTPHandler init")
     }
 
     public func handlerAdded(ctx: ChannelHandlerContext) {
@@ -34,8 +43,14 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
 
-        let outboudDataOut = data //self.wrapOutboundOut(data)
-        ctx.fireChannelRead(outboudDataOut)
+        
+        print("SEHTTPHandler channelRead")
+        // let outboudDataOut = data //self.wrapOutboundOut(data)
+        // ctx.fireChannelRead(outboudDataOut)
+
+        if requestId == nil {
+            requestId = randomAlphaNumericString(length: 32)
+        }
 
         let reqPart = self.unwrapInboundIn(data)
         switch reqPart {
@@ -43,9 +58,29 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 		    self.keepAlive = request.isKeepAlive
             self.infoSavedRequestHead = request
             break
-        case .body:
+        case .body(buffer: var buff):
+
+            // create the file handle if it doesnt already exists
+            if requestBodyFileHandle == nil {
+                requestBodyFilePath = "/tmp/" + requestId
+                FileManager.default.createFile(atPath:  requestBodyFilePath, contents: nil, attributes: nil)  
+                requestBodyFileHandle = FileHandle(forWritingAtPath: requestBodyFilePath)
+            }
+
+            // write to the file handle
+            if  let _data = buff.readData(length: buff.readableBytes) {
+                requestBodyFileHandle.write(_data)
+                // let niofile = NIO.FileHandle(descriptor: _file.fileDescriptor)
+                // self.fileIO.write(fileHandle: niofile, buffer: buf, eventLoop: ctx.eventLoop)
+            }
             break
         case .end:
+
+            // close the request body filehandle if we have one open
+            if requestBodyFileHandle != nil {
+                requestBodyFileHandle.closeFile()
+                requestBodyFileHandle = nil
+            }
             // Ensure we got the request head
             guard let request = self.infoSavedRequestHead else {
                 let errMsg = "Could not process request"
@@ -80,6 +115,10 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                             "SERVER_NAME" : "localhost",
                             
             ]
+
+            if let requestId = requestId {
+                envVars["REQUEST_ID"] = requestId
+            }
             
             
             // Change all headers to env vars
@@ -122,7 +161,11 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
 
             // Run it
-            var (stdOut, _, _) = SEShell.run(args, envVars: envVars)
+            var (stdOut, stdErr, status) = SEShell.run(args, envVars: envVars)
+
+            let output = (status == 0 ? stdOut : stdErr)
+
+            print("stdError: \(output)")
             
             // Log request
             SELogger.log(request: request, ip: remoteIp, stdOut: stdOut)
@@ -130,12 +173,17 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Write it out
             var buf = ctx.channel.allocator.buffer(capacity: stdOut.utf8.count)
-            buf.set(string: stdOut, at: 0)
-            let nio = NIOAny(ByteBuffer.forString(stdOut))
+            buf.set(string: output, at: 0)
+            let nio = NIOAny(ByteBuffer.forString(output))
             ctx.write(nio, promise: nil)
             ctx.flush()
             ctx.close(promise: nil)
             //self.completeResponse(ctx, trailers: nil, promise: nil)
+
+            if requestBodyFilePath != nil {
+                try? FileManager.default.removeItem(atPath:  requestBodyFilePath)  
+            }
+
             break
         }
     }
@@ -178,6 +226,24 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         //ctx.writeAndFlush(self.wrapOutboundOut(ByteBuffer.forString("0\r\n\r\n")), promise: promise)
     }
 
+}
+
+
+func randomAlphaNumericString(length: Int = 7)->String{
+
+    enum s {
+        static let c = Array("abcdefghjklmnpqrstuvwxyz12345789")
+        static let k = UInt32(c.count)
+    }
+
+    var result = [Character](repeating: "a", count: length)
+
+    for i in 0..<length {
+        let r = Int(arc4random_uniform(s.k))
+        result[i] = s.c[r]
+    }
+
+    return String(result)
 }
 
 

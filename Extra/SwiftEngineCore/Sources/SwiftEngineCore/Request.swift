@@ -9,6 +9,16 @@ public class Request {
     
     public var headers = CIDictionary<String, String>()
     public var server = CIDictionary<String, String>()
+
+    lazy public var body : RequestBody? = {
+        if let requestId = self.server["REQUEST_ID"],
+            let fh = FileHandle(forReadingAtPath: "/tmp/\(requestId)")
+            {
+            let data = fh.readDataToEndOfFile()
+            return RequestBody(data:data)
+        }
+        return nil
+    }()
     
     public init(ctx: RequestContext) {
         self.ctx = ctx 
@@ -24,9 +34,9 @@ public class Request {
             }
         }
     }
-        
-
 }
+
+
 
 public typealias CIDictionary = Dictionary
 
@@ -48,6 +58,21 @@ public extension CIDictionary where Key == String {
             }
         }
     }
+}
+
+
+public class RequestBody {
+    public let data : Data
+
+    lazy private(set) public var string : String? = {
+        return String(data: self.data, encoding: String.Encoding.utf8)
+    }()
+
+    init(data: Data){
+        self.data = data
+    }
+
+
 
 }
 
