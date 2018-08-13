@@ -14,6 +14,7 @@ class SELogger {
     
     // This shouldn't be a property of the class but doing it for now
     private static let basePath = "/var/log/swiftengine"
+    private static let maxLogSize = 10_000_000
     
     private static let accessLogName = "access.log"
     private static let errorLogName = "error.log"
@@ -39,26 +40,32 @@ class SELogger {
     // Log a server request
     private class func log(ip: String, requestStr: String, responseCode code: String, bodyLength length: Int) {
         let str = "\(ip) - - [\(SELogger.getLogTime())] \"\(requestStr)\" \(code) \(length)\n"
-        let path = "\(SELogger.basePath)/\(SELogger.accessLogName)"
-        SELogger.writeOut(str, toFile: path)
+        let file = SELogger.accessLogName
+        SELogger.writeOut(str, toFile: file)
     }
     
     // Log a server error
     private class func logError(ip: String, errorMessage: String) {
         let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)\n"
-        let path = "\(SELogger.basePath)/\(SELogger.errorLogName)"
-        SELogger.writeOut(str, toFile: path)
+        let file = SELogger.errorLogName
+        SELogger.writeOut(str, toFile: file)
     }
     
     
     // Generic writing to file
-    private class func writeOut(_ str: String, toFile path: String) {
-        
+    private class func writeOut(_ str: String, toFile file: String) {
+        let path = "\(SELogger.basePath)/\(file)"
         if let data = str.data(using: .utf8) {
             // File already exists
             if FileManager.default.fileExists(atPath: path) {
                 if let fileHandle = FileHandle(forUpdatingAtPath: path) {
-                    fileHandle.seekToEndOfFile()
+                    let size = fileHandle.seekToEndOfFile()
+                    
+                    // Rotate logs if larger than max alloted size
+                    if size >= SELogger.maxLogSize {
+                        SELogger.rotateLogs(named: file)
+                    }
+                    
                     fileHandle.write(data)
                     fileHandle.closeFile()
                 }
@@ -70,11 +77,36 @@ class SELogger {
                     try str.write(to: fileUrl, atomically: false, encoding: .utf8)
                 }
                 catch {
-                    print("Could not write out to \(path)/\(SELogger.accessLogName)")
+                    print("Could not write out to \(path)")
                     exit(-1)
                 }
             }
         }
+    }
+    
+    // Rotates logs with the specified name
+    private class func rotateLogs(named name: String) {
+        do {
+            let allLogs = try FileManager.default.contentsOfDirectory(atPath: SELogger.basePath)
+            
+            // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
+            let logs = allLogs.filter({$0.starts(with: name)}).sorted().reversed()
+            for file in logs {
+                // Get log number of the file
+                if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
+                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
+                }
+                // Means we hit the currently active log; append 0
+                else {
+                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+                }
+            }
+        }
+        catch {
+            print("Error rotating logs")
+            exit(0)
+        }
+
     }
     
     
