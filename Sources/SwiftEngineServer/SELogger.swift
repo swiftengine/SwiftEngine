@@ -24,7 +24,7 @@ class SELogger {
     internal class func log(request: HTTPRequestHead, ip: String, stdOut: String) {
         let components = stdOut.components(separatedBy: "\n\n")
         let headers = components[0]
-        let responseCode = headers.components(separatedBy: " ")[1]
+        let responseCode = headers.components(separatedBy: .newlines)[0].components(separatedBy: " ")[1]
         let body = components[1]
         
         // Log the request
