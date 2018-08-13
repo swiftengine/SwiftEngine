@@ -90,24 +90,20 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
             
             // Add the server ip and port
-            if let serverAddr = ctx.localAddress {
-                if let ip = serverAddr.ip {
-                    envVars["SERVER_ADDR"] = ip
-                }
-                if let port = serverAddr.port {
-                    envVars["SERVER_PORT"] = "\(port)"
-                }
+            guard let serverAddr = ctx.localAddress, let serverIp = serverAddr.ip, let serverPort = serverAddr.port else {
+                return
             }
+            envVars["SERVER_ADDR"] = serverIp
+            envVars["SERVER_PORT"] = "\(serverPort)"
+            
             
             // Add the remote IP and port
-            if let remoteAddr = ctx.remoteAddress {
-                if let ip = remoteAddr.ip {
-                    envVars["REMOTE_ADDR"] = ip
-                }
-                if let port = remoteAddr.port {
-                    envVars["REMOTE_PORT"] = "\(port)"
-                }
+            guard let remoteAddr = ctx.remoteAddress, let remoteIp = remoteAddr.ip, let remotePort = remoteAddr.port else {
+                return
             }
+            envVars["REMOTE_ADDR"] = remoteIp
+            envVars["REMOTE_PORT"] = "\(remotePort)"
+            
 
             //self.printEnvVars(envVars)
             var args = [String]()
@@ -127,6 +123,10 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 
             // Run it
             var (stdOut, _, _) = SEShell.run(args, envVars: envVars)
+            
+            // Log request
+            SELogger.log(request: request, ip: remoteIp, stdOut: stdOut)
+            
             
             // Write it out
             var buf = ctx.channel.allocator.buffer(capacity: stdOut.utf8.count)

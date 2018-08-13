@@ -6,18 +6,75 @@
 //
 
 import Foundation
+import NIOHTTP1
 
 class SELogger {
     
     private static let cal = Calendar(identifier: .gregorian)
     
+    // This shouldn't be a property of the class but doing it for now
+    private static let basePath = "/var/log/swiftengine"
     
-    public class func log(ip: String, requestStr: String, responseCode code: Int, bodyLength length: Int) {
-        let str = "\(ip) - - [\(SELogger.getLogTime())] \"\(requestStr)\" \(code) \(length)"
+    private static let accessLogName = "access.log"
+    private static let errorLogName = "error.log"
+    
+    
+    // Log
+    internal class func log(request: HTTPRequestHead, ip: String, stdOut: String) {
+        let components = stdOut.components(separatedBy: "\n\n")
+        let headers = components[0]
+        let responseCode = headers.components(separatedBy: " ")[1]
+        let body = components[1]
+        
+        // Log the request
+        SELogger.log(ip: ip, requestStr: "\(request.method) \(request.version) \(request.uri)", responseCode: responseCode, bodyLength: body.count)
+        
+        // If response code isn't 200, error
+        if responseCode != "200" {
+            let errorMsg = stdOut.replacingOccurrences(of: "\n", with: " ")
+            SELogger.logError(ip: ip, errorMessage: errorMsg)
+        }
     }
     
-    public class func logError(ip: String, requestStr: String, errorMessage: String) {
-        let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)"
+    // Log a server request
+    private class func log(ip: String, requestStr: String, responseCode code: String, bodyLength length: Int) {
+        let str = "\(ip) - - [\(SELogger.getLogTime())] \"\(requestStr)\" \(code) \(length)\n"
+        let path = "\(SELogger.basePath)/\(SELogger.accessLogName)"
+        SELogger.writeOut(str, toFile: path)
+    }
+    
+    // Log a server error
+    private class func logError(ip: String, errorMessage: String) {
+        let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)\n"
+        let path = "\(SELogger.basePath)/\(SELogger.errorLogName)"
+        SELogger.writeOut(str, toFile: path)
+    }
+    
+    
+    // Generic writing to file
+    private class func writeOut(_ str: String, toFile path: String) {
+        
+        if let data = str.data(using: .utf8) {
+            // File already exists
+            if FileManager.default.fileExists(atPath: path) {
+                if let fileHandle = FileHandle(forUpdatingAtPath: path) {
+                    fileHandle.seekToEndOfFile()
+                    fileHandle.write(data)
+                    fileHandle.closeFile()
+                }
+            }
+            // File does not exist
+            else {
+                let fileUrl = URL(fileURLWithPath: "\(path)")
+                do {
+                    try str.write(to: fileUrl, atomically: false, encoding: .utf8)
+                }
+                catch {
+                    print("Could not write out to \(path)/\(SELogger.accessLogName)")
+                    exit(-1)
+                }
+            }
+        }
     }
     
     
