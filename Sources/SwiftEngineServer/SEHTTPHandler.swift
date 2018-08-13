@@ -35,7 +35,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         self.documentRoot = documentRoot
         self.pathToSEProcessor = pathToSEProcessor
 
-        print("SEHTTPHandler init")
+        //print("SEHTTPHandler init")
     }
 
     public func handlerAdded(ctx: ChannelHandlerContext) {
@@ -44,7 +44,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
 
         
-        print("SEHTTPHandler channelRead")
+        //print("SEHTTPHandler channelRead")
         // let outboudDataOut = data //self.wrapOutboundOut(data)
         // ctx.fireChannelRead(outboudDataOut)
 
@@ -165,10 +165,10 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 
             let output = (status == 0 ? stdOut : stdErr)
 
-            print("stdError: \(output)")
+            //print("stdError: \(output)")
             
             // Log request
-            SELogger.log(request: request, ip: remoteIp, stdOut: stdOut)
+            SELogger.log(request: request, ip: remoteIp, stdOut: output)
             
             
             // Write it out
