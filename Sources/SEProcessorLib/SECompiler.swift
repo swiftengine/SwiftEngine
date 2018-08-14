@@ -109,10 +109,15 @@ public class SECompiler {
         }
         
         // Add SECore objects
-        var seCoreObjects = SECompiler.getSECoreObjectsList()
-        seCoreObjects = seCoreObjects.map{"\(SEGlobals.SECORE_LOCATION)/\($0)"}
-        args.append(contentsOf: seCoreObjects)
+        // var seCoreObjects = SECompiler.getSECoreObjectsList()
+        // seCoreObjects = seCoreObjects.map{"\(SEGlobals.SECORE_LOCATION)/\($0)"}
+        // args.append(contentsOf: seCoreObjects)
 
+        // add the libFile
+        //args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.a")
+        args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib")
+        // let cmd = args.joined(separator: " ")
+        // print("cmd: \(cmd)")
 
 		// Run the executable
         let newArgs = args //["/usr/bin/env"]
