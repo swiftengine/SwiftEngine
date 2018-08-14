@@ -115,7 +115,11 @@ public class SECompiler {
 
         // add the libFile
         //args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.a")
-        args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib")
+	#if os(OSX)
+		args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib")
+	#else
+		args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.so")
+	#endif
         // let cmd = args.joined(separator: " ")
         // print("cmd: \(cmd)")
 

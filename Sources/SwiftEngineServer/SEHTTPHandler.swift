@@ -2,7 +2,9 @@ import Foundation
 import NIO
 import NIOHTTP1 
 import NIOFoundationCompat
-//import Glibc
+#if os(Linux)
+import Glibc
+#endif
 //import Darwin
 
 
@@ -239,7 +241,7 @@ func randomAlphaNumericString(length: Int = 7)->String{
     var result = [Character](repeating: "a", count: length)
 
     for i in 0..<length {
-        let r = Int(arc4random_uniform(s.k))
+        let r = Int(random() % Int(s.k))
         result[i] = s.c[r]
     }
 
