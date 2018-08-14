@@ -63,7 +63,11 @@ class SELogger {
                     
                     // Rotate logs if larger than max alloted size
                     if size >= SELogger.maxLogSize {
-                        SELogger.rotateLogs(named: file)
+                        // Close this file handle as it will change, rotate, then call this function again
+                        fileHandle.closeFile()
+                        SELogger.rotateLogs()
+                        SELogger.writeOut(str, toFile: file)
+                        return
                     }
                     
                     fileHandle.write(data)
@@ -85,22 +89,25 @@ class SELogger {
     }
     
     // Rotates logs with the specified name
-    private class func rotateLogs(named name: String) {
+    private class func rotateLogs() {
         do {
             let allLogs = try FileManager.default.contentsOfDirectory(atPath: SELogger.basePath)
-            
-            // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
-            let logs = allLogs.filter({$0.starts(with: name)}).sorted().reversed()
-            for file in logs {
-                // Get log number of the file
-                if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
-                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
-                }
-                // Means we hit the currently active log; append 0
-                else {
-                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+            let logTypes = [SELogger.accessLogName, SELogger.errorLogName]
+            for name in logTypes {
+                // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
+                let logs = allLogs.filter({$0.starts(with: name)}).sorted().reversed()
+                for file in logs {
+                    // Get log number of the file
+                    if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
+                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
+                    }
+                    // Means we hit the currently active log; append 0
+                    else {
+                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+                    }
                 }
             }
+            
         }
         catch {
             print("Error rotating logs")
