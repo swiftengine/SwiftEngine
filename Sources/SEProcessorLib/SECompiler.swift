@@ -123,7 +123,6 @@ public class SECompiler {
         let newArgs = args //["/usr/bin/env"]
         let (_, stdErr, status) = SEShell.run(newArgs)
         if (status != 0) {
-            print("\(stdErr)<hr>")
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
         }

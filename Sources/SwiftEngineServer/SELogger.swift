@@ -8,16 +8,33 @@
 import Foundation
 import NIOHTTP1
 
-class SELogger {
+public class SELogger {
+    
+    public enum LogLevel: Int {
+        case debug = 1,
+        info,
+        notice,
+        warm,
+        error,
+        crit,
+        alert,
+        emerg
+    }
     
     private static let cal = Calendar(identifier: .gregorian)
     
     // This shouldn't be a property of the class but doing it for now
     private static let basePath = "/var/log/swiftengine"
+    private static let defaultLogLevel: LogLevel = LogLevel.error
     private static let maxLogSize = 10_000_000
     
     private static let accessLogName = "access.log"
     private static let errorLogName = "error.log"
+    
+    
+    public class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
+        
+    }
     
     
     // Log
@@ -45,8 +62,8 @@ class SELogger {
     }
     
     // Log a server error
-    private class func logError(ip: String, errorMessage: String) {
-        let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)\n"
+    private class func logError(ip: String, errorMessage: String, logLevel: LogLevel = SELogger.defaultLogLevel) {
+        let str = "[\(SELogger.getErrorTime())] [\(logLevel)] [client \(ip)] \(errorMessage)\n"
         let file = SELogger.errorLogName
         SELogger.writeOut(str, toFile: file)
     }
@@ -63,7 +80,11 @@ class SELogger {
                     
                     // Rotate logs if larger than max alloted size
                     if size >= SELogger.maxLogSize {
-                        SELogger.rotateLogs(named: file)
+                        // Close this file handle as it will change, rotate, then call this function again
+                        fileHandle.closeFile()
+                        SELogger.rotateLogs()
+                        SELogger.writeOut(str, toFile: file)
+                        return
                     }
                     
                     fileHandle.write(data)
@@ -85,22 +106,25 @@ class SELogger {
     }
     
     // Rotates logs with the specified name
-    private class func rotateLogs(named name: String) {
+    private class func rotateLogs() {
         do {
             let allLogs = try FileManager.default.contentsOfDirectory(atPath: SELogger.basePath)
-            
-            // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
-            let logs = allLogs.filter({$0.starts(with: name)}).sorted().reversed()
-            for file in logs {
-                // Get log number of the file
-                if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
-                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
-                }
-                // Means we hit the currently active log; append 0
-                else {
-                    try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+            let logTypes = [SELogger.accessLogName, SELogger.errorLogName]
+            for name in logTypes {
+                // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
+                let logs = allLogs.filter({$0.starts(with: name)}).sorted().reversed()
+                for file in logs {
+                    // Get log number of the file
+                    if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
+                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
+                    }
+                    // Means we hit the currently active log; append 0
+                    else {
+                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+                    }
                 }
             }
+            
         }
         catch {
             print("Error rotating logs")
