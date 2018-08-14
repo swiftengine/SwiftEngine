@@ -1,4 +1,5 @@
 import Foundation
+import SwiftyJSON
 
 
 public typealias RouteParams = [String : Any]
@@ -66,6 +67,10 @@ public class RequestBody {
 
     lazy private(set) public var string : String? = {
         return String(data: self.data, encoding: String.Encoding.utf8)
+    }()
+
+    lazy private(set) public var json : JSON? = {
+        return JSON(data: self.data)
     }()
 
     init(data: Data){

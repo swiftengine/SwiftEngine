@@ -11,9 +11,9 @@ default:
 build:
 	$(swift) build --product SwiftEngine -c release -Xswiftc -g 
 	rm -f $(SECORE_LOCATION)/SEObjects.list
-	find $(release_dir)/SwiftEngine.build -type f \( -name "*.o" ! -iname "main.swift.o" \) -exec basename {} \; >> $(SECORE_LOCATION)/SEObjects.list
+	(cd $(release_dir) && find . -type f \( -name "*.o" ! -iname "main.swift.o" \) >> $(SECORE_LOCATION)/SEObjects.list )
 	rm -f $(SECORE_LOCATION)/SEmodulemaps.list
-	find $(release_dir)/SwiftEngine.build -type f -name "*.modulemap" -exec basename {} \; >> $(SECORE_LOCATION)/SEmodulemaps.list
+	(cd $(release_dir) && find . -type f -name "*.modulemap" >> $(SECORE_LOCATION)/SEmodulemaps.list )
 
 package:
 

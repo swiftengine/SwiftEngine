@@ -116,6 +116,9 @@ setup-system:
 	mkdir -p /var/swiftengine/www /var/swiftengine/.cache
 	cp -R Extra/templates/var/swiftengine/www/* /var/swiftengine/www/
 	chmod -R a+w /var/swiftengine
+	mkdir -p /var/log/swiftengine
+	chmod -R a+w /var/log/swiftengine
+
 
 
 
