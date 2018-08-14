@@ -241,7 +241,11 @@ func randomAlphaNumericString(length: Int = 7)->String{
     var result = [Character](repeating: "a", count: length)
 
     for i in 0..<length {
-        let r = Int(random() % Int(s.k))
+        #if os(OSX)
+            let r = Int(arc4random_uniform(s.k))
+        #else
+            let r = Int(random() % Int(s.k))
+        #endif
         result[i] = s.c[r]
     }
 
