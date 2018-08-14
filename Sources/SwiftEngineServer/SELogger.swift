@@ -8,16 +8,33 @@
 import Foundation
 import NIOHTTP1
 
-class SELogger {
+public class SELogger {
+    
+    public enum LogLevel: Int {
+        case debug = 1,
+        info,
+        notice,
+        warm,
+        error,
+        crit,
+        alert,
+        emerg
+    }
     
     private static let cal = Calendar(identifier: .gregorian)
     
     // This shouldn't be a property of the class but doing it for now
     private static let basePath = "/var/log/swiftengine"
+    private static let defaultLogLevel: LogLevel = LogLevel.error
     private static let maxLogSize = 10_000_000
     
     private static let accessLogName = "access.log"
     private static let errorLogName = "error.log"
+    
+    
+    public class func log(message: String, level: LogLevel) {
+        
+    }
     
     
     // Log
@@ -45,8 +62,8 @@ class SELogger {
     }
     
     // Log a server error
-    private class func logError(ip: String, errorMessage: String) {
-        let str = "[\(SELogger.getErrorTime())] [error] [client \(ip)] \(errorMessage)\n"
+    private class func logError(ip: String, errorMessage: String, logLevel: LogLevel = SELogger.defaultLogLevel) {
+        let str = "[\(SELogger.getErrorTime())] [\(logLevel)] [client \(ip)] \(errorMessage)\n"
         let file = SELogger.errorLogName
         SELogger.writeOut(str, toFile: file)
     }
