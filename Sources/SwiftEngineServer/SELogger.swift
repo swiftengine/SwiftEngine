@@ -32,7 +32,7 @@ public class SELogger {
     private static let errorLogName = "error.log"
     
     
-    public class func log(message: String, level: LogLevel) {
+    public class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
         
     }
     
