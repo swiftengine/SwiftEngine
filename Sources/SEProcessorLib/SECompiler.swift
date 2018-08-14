@@ -8,10 +8,6 @@ public class SECompiler {
     // Location of the main.swift file
     static let seMain = "/etc/swiftengine/magic/main.swift"
     
-    // Path to the SECore library
-    static var pathToSECoreObjectsList: String {
-        return "\(SEGlobals.SECORE_LOCATION)/SEObjects.list"
-    }
     
     /*
      Ex. DOCUMENT_ROOT: /usr/me/
@@ -22,7 +18,9 @@ public class SECompiler {
     */
     static var relativePath: String!
     static var executableName: String!
+    static var seCoreObjectList: String!
     static let binaryCompilationLocation = "/var/swiftengine/.cache"
+    static let entryPointFilename = "default"
     
     static var fullExecutablePath: String {
         return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)/\(SECompiler.executableName!)"
@@ -34,8 +32,19 @@ public class SECompiler {
     public class func excuteRequest(path: String) {
         // Set executable name
         SECompiler.setPathComponents(forPath: path)
+        
+        SECompiler.setSECoreObjectLibrary()
+        
         // Execute request
         SECompiler._excuteRequest(path: path)
+    }
+    
+    private class func setSECoreObjectLibrary() {
+        #if os(OSX)
+            SECompiler.seCoreObjectList = "\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib"
+        #else
+            SECompiler.seCoreObjectList = "\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.so"
+        #endif
     }
 
     class func dump(_ str: String, _ doExit: Bool = false){
@@ -115,11 +124,9 @@ public class SECompiler {
 
         // add the libFile
         //args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.a")
-	#if os(OSX)
-		args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib")
-	#else
-		args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.so")
-	#endif
+
+        args.append(self.seCoreObjectList!)
+        
         // let cmd = args.joined(separator: " ")
         // print("cmd: \(cmd)")
 
@@ -130,22 +137,23 @@ public class SECompiler {
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
         }
+        
 
 	}
     
     
     
-    // Get's the necessary SECore objects from the specified path
-    private class func getSECoreObjectsList() -> [String] {
-        if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
-            var ret = [String]()
-            var files = contents.components(separatedBy: .newlines)
-            files = files.filter(){ $0 != ""}
-            ret.append(contentsOf: files)
-            return ret
-        }
-        return [String]()
-    }
+//    // Get's the necessary SECore objects from the specified path
+//    private class func getSECoreObjectsList() -> [String] {
+//        if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
+//            var ret = [String]()
+//            var files = contents.components(separatedBy: .newlines)
+//            files = files.filter(){ $0 != ""}
+//            ret.append(contentsOf: files)
+//            return ret
+//        }
+//        return [String]()
+//    }
     
     
 
@@ -229,9 +237,10 @@ public class SECompiler {
             return false
         }
         
+
         do {
-            // Read sources from sourcesFile
-            let sources = try String(contentsOfFile: sourcesFile, encoding: .utf8).components(separatedBy: "\n")
+            // Check the required files
+            let sources = try String(contentsOfFile: sourcesFile, encoding: .utf8).components(separatedBy: .newlines)
             
             // Get date of .sources file
             let sourcesFileAttrs = try fileManager.attributesOfItem(atPath: SECompiler.fullExecutablePath)
@@ -250,11 +259,40 @@ public class SECompiler {
                     }
                 }
             }
+            
+            
+            // Check the executable against SECore and main.swift
+            let executableAttrs = try fileManager.attributesOfItem(atPath: "\(SECompiler.binaryCompilationLocation)/\(SECompiler.entryPointFilename)")
+            if let executableCreationDate = executableAttrs[.modificationDate] as? Date {
+                
+                // SECoreLib
+                let seCoreLibAttrs = try fileManager.attributesOfItem(atPath: SECompiler.seCoreObjectList!)
+                if let seCoreCreationDate = seCoreLibAttrs[.modificationDate] as? Date {
+
+                    // If the SECorelib is more recent than the executable, not current
+                    if seCoreCreationDate > executableCreationDate {
+                        return false
+                    }
+                }
+
+                // main.swift
+                let mainAttrs = try fileManager.attributesOfItem(atPath: SECompiler.seMain)
+                if let mainCreationDate = mainAttrs[.modificationDate] as? Date {
+
+                    // Main is more recent than executbale
+                    if mainCreationDate > executableCreationDate {
+                        return false
+                    }
+                }
+            }
+            
         }
         catch {
             SEShell.stdErr.write(error.localizedDescription)
             exit(-1)
         }
+        
+        
         
         // All required files are newer than .sources file
         return true

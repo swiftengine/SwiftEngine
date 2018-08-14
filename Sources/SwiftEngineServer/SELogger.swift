@@ -1,6 +1,6 @@
 //
 //  SELogger.swift
-//  SEProcessorLib
+//  SwiftEngineServer
 //
 //  Created by Brandon Holden on 8/10/18.
 //
@@ -32,17 +32,21 @@ public class SELogger {
     private static let errorLogName = "error.log"
     
     
-    public class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
-        
-    }
+    
+//    internal class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
+//        let message = "File: \(file)  Line: \(line)  Message: \(message)"
+//        SELogger.logError(ip: "idk", errorMessage: message, logLevel: level)
+//    }
     
     
     // Log
     internal class func log(request: HTTPRequestHead, ip: String, stdOut: String) {
         let components = stdOut.components(separatedBy: "\n\n")
         let headers = components[0]
-        let responseCode = headers.components(separatedBy: .newlines)[0].components(separatedBy: " ")[1]
+        let responseLine = headers.components(separatedBy: .newlines)[0]
+        let responseCode = responseLine.components(separatedBy: " ")[1]
         let body = components[1]
+
         
         // Log the request
         SELogger.log(ip: ip, requestStr: "\(request.method) \(request.version) \(request.uri)", responseCode: responseCode, bodyLength: body.count)
@@ -64,7 +68,7 @@ public class SELogger {
     // Log a server error
     private class func logError(ip: String, errorMessage: String, logLevel: LogLevel = SELogger.defaultLogLevel) {
         let str = "[\(SELogger.getErrorTime())] [\(logLevel)] [client \(ip)] \(errorMessage)\n"
-        let file = SELogger.errorLogName
+        let file = "\(logLevel).log"
         SELogger.writeOut(str, toFile: file)
     }
     
@@ -108,7 +112,8 @@ public class SELogger {
     // Rotates logs with the specified name
     private class func rotateLogs() {
         do {
-            let allLogs = try FileManager.default.contentsOfDirectory(atPath: SELogger.basePath)
+            let fileManager = FileManager.default
+            let allLogs = try fileManager.contentsOfDirectory(atPath: SELogger.basePath)
             let logTypes = [SELogger.accessLogName, SELogger.errorLogName]
             for name in logTypes {
                 // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
@@ -116,11 +121,11 @@ public class SELogger {
                 for file in logs {
                     // Get log number of the file
                     if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
-                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
+                        try fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
                     }
                     // Means we hit the currently active log; append 0
                     else {
-                        try FileManager.default.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+                        try fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
                     }
                 }
             }
