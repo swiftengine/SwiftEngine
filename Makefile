@@ -23,7 +23,6 @@ build-swiftengineserver:
 
 build-seprocessor:
 	$(swift) build --product SEProcessor
-	
 
 build-secore:
 	make -C Extra/SwiftEngineCore build
@@ -77,6 +76,8 @@ install-dependencies-linux:
 	$(eval short_ubuntu_version = $(shell echo $(ubuntu_version) | tr --delete .))
 	$(eval swift_download_source = "https://swift.org/builds/swift-$(swift_version)-release/ubuntu$(short_ubuntu_version)/swift-$(swift_version)-RELEASE/swift-$(swift_version)-RELEASE-ubuntu$(ubuntu_version).tar.gz" )
 	make install-cleanup-ubuntu
+	apt-get -y install git cmake ninja-build clang python uuid-dev libicu-dev icu-devtools libbsd-dev libedit-dev libxml2-dev libsqlite3-dev swig libpython-dev libncurses5-dev pkg-config libblocksruntime-dev libcurl4-openssl-dev systemtap-sdt-dev tzdata rsync
+	apt-get -y install libz-dev
 	wget $(swift_download_source) -O $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu.tar.gz
 	mkdir -p $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu 
 	tar -xvzf $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu.tar.gz --directory $(TMP_DIR)/swift-$(swift_version)-RELEASE-ubuntu --strip-components=1
