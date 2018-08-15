@@ -44,7 +44,11 @@ public class SELogger {
         let components = stdOut.components(separatedBy: "\n\n")
         let headers = components[0]
         let responseLine = headers.components(separatedBy: .newlines)[0]
+        
+        guard responseLine.count > 1 else { return }
         let responseCode = responseLine.components(separatedBy: " ")[1]
+        
+        guard components.count > 1 else { return }
         let body = components[1]
 
         
