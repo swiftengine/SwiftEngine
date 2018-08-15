@@ -120,6 +120,12 @@ public class SECompiler {
         // Add SECore objects
         args.append(self.seCoreObjectList!)
         
+        //printEnvVars(ProcessInfo.processInfo.environment)
+        
+        //dump(SECompiler.relativePath!)
+        //dump(SECompiler.fullExecutablePath, true)
+        
+        
         // let cmd = args.joined(separator: " ")
         // print("cmd: \(cmd)")
 
@@ -328,13 +334,7 @@ public class SECompiler {
 		print("\(resp)")
 		print("</pre>")
 	}
-    
-    
-    
-    private class func getErrors(_ error: String) -> String {
-        let arrError = SECompiler.matchError(error)
-        return SECompiler.decoreError(sError: error, errors: arrError)
-    }
+
 
 }
 
@@ -390,6 +390,11 @@ extension SECompiler {
 
 /*  Private helper methods for displaying errors and outputting code   */
 extension SECompiler {
+    
+    private class func getErrors(_ error: String) -> String {
+        let arrError = SECompiler.matchError(error)
+        return SECompiler.decoreError(sError: error, errors: arrError)
+    }
     
     private class func matchError(_ error: String) -> [NSTextCheckingResult] {
         let errorPattern =     "\n(?<filePath>[^:\n]+)" +            // get the filename

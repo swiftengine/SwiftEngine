@@ -91,7 +91,11 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Script name and query string
             let uriComponents = request.uri.components(separatedBy: "?")
-            let scriptName = uriComponents[0]
+            var scriptName = uriComponents[0]
+            if let lastChar = scriptName.last, lastChar == "/" {
+                scriptName = String(scriptName.dropLast())
+            }
+            
             var queryStr = ""
             if uriComponents.count > 1 {
                 queryStr = uriComponents[1]
