@@ -18,9 +18,9 @@ What are the dependencies we need to get this to work?
 OS  | Version
 ------------- | -------------
 OSX | 10.13.2
-Linux  | 14.04
-Linux  | 16.04
-Linux  | 16.10
+Ubuntu  | 14.04
+Ubuntu  | 16.04
+Ubuntu  | 16.10
 
 ## Installing
 Installing and starting the server:
