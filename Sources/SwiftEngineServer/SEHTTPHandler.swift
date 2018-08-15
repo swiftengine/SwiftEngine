@@ -50,8 +50,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         // let outboudDataOut = data //self.wrapOutboundOut(data)
         // ctx.fireChannelRead(outboudDataOut)
 
-        if requestId == nil {
-            requestId = randomAlphaNumericString(length: 32)
+        if self.requestId == nil {
+            self.requestId = randomAlphaNumericString(length: 32)
         }
 
         let reqPart = self.unwrapInboundIn(data)
@@ -63,14 +63,14 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         case .body(buffer: var buff):
 
             // create the file handle if it doesnt already exists
-            if requestBodyFileHandle == nil {
-                requestBodyFilePath = "/tmp/" + requestId
-                FileManager.default.createFile(atPath:  requestBodyFilePath, contents: nil, attributes: nil)  
-                requestBodyFileHandle = FileHandle(forWritingAtPath: requestBodyFilePath)
+            if self.requestBodyFileHandle == nil {
+                self.requestBodyFilePath = "/tmp/" + self.requestId
+                FileManager.default.createFile(atPath: self.requestBodyFilePath, contents: nil, attributes: nil)
+                self.requestBodyFileHandle = FileHandle(forWritingAtPath: self.requestBodyFilePath)
             }
 
             // write to the file handle
-            if  let _data = buff.readData(length: buff.readableBytes) {
+            if let _data = buff.readData(length: buff.readableBytes) {
                 requestBodyFileHandle.write(_data)
                 // let niofile = NIO.FileHandle(descriptor: _file.fileDescriptor)
                 // self.fileIO.write(fileHandle: niofile, buffer: buf, eventLoop: ctx.eventLoop)
@@ -79,31 +79,25 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         case .end:
 
             // close the request body filehandle if we have one open
-            if requestBodyFileHandle != nil {
-                requestBodyFileHandle.closeFile()
-                requestBodyFileHandle = nil
+            if self.requestBodyFileHandle != nil {
+                self.requestBodyFileHandle.closeFile()
+                self.requestBodyFileHandle = nil
             }
             // Ensure we got the request head
             guard let request = self.infoSavedRequestHead else {
-                let errMsg = "Could not process request"
-                var errBuf = ctx.channel.allocator.buffer(capacity: errMsg.utf8.count)
-                errBuf.set(string: errMsg, at: 0)
-                let errNio = NIOAny(ByteBuffer.forString(errMsg))
-                ctx.write(errNio, promise: nil)
-                ctx.flush()
-                ctx.close(promise: nil)
+                self.errorInChannelRead(ctx)
                 return
             }
-            //print(request)
-            //print("")
             
             // Script name and query string
-            let uriComponents = request.uri.split(separator: "?")
-            let scriptName = String(uriComponents[0])
+            let uriComponents = request.uri.components(separatedBy: "?")
+            let scriptName = uriComponents[0]
             var queryStr = ""
             if uriComponents.count > 1 {
-                queryStr = String(uriComponents[1])
+                queryStr = uriComponents[1]
             }
+            
+            let fileManager = FileManager.default
             
             // Set CGI environment variables
             var envVars = [ "SCRIPT_NAME" : scriptName,
@@ -132,6 +126,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Add the server ip and port
             guard let serverAddr = ctx.localAddress, let serverIp = serverAddr.ip, let serverPort = serverAddr.port else {
+                self.errorInChannelRead(ctx)
                 return
             }
             envVars["SERVER_ADDR"] = serverIp
@@ -140,6 +135,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Add the remote IP and port
             guard let remoteAddr = ctx.remoteAddress, let remoteIp = remoteAddr.ip, let remotePort = remoteAddr.port else {
+                self.errorInChannelRead(ctx)
                 return
             }
             envVars["REMOTE_ADDR"] = remoteIp
@@ -150,13 +146,14 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             var args = [String]()
             if let seProcessorLocation = ProcessInfo.processInfo.environment["SEPROCESSOR_LOCATION"] {
                 args.append(seProcessorLocation)
-                if !FileManager.default.fileExists(atPath: seProcessorLocation){
+                if !fileManager.fileExists(atPath: seProcessorLocation){
                     print("SEProcessor file does not exist: \(seProcessorLocation)")
                 }
             }
             else {
                 args.append(self.pathToSEProcessor)
             }
+            
             
             if let seCoreLocation = ProcessInfo.processInfo.environment["SECORE_LOCATION"] {
                 args.append("-secore-location=\(seCoreLocation)")
@@ -166,8 +163,6 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             var (stdOut, stdErr, status) = SEShell.run(args, envVars: envVars)
 
             let output = (status == 0 ? stdOut : stdErr)
-
-            //print("stdError: \(output)")
             
             // Log request
             SELogger.log(request: request, ip: remoteIp, stdOut: output)
@@ -182,13 +177,39 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             ctx.close(promise: nil)
             //self.completeResponse(ctx, trailers: nil, promise: nil)
 
-            if requestBodyFilePath != nil {
-                try? FileManager.default.removeItem(atPath:  requestBodyFilePath)  
+            if self.requestBodyFilePath != nil {
+                try? fileManager.removeItem(atPath:  self.requestBodyFilePath)
             }
-
             break
         }
     }
+    
+    
+    // Generic display error function
+    private func errorInChannelRead(_ ctx: ChannelHandlerContext) {
+        let errMsg = "Could not process request"
+        var errBuf = ctx.channel.allocator.buffer(capacity: errMsg.utf8.count)
+        errBuf.set(string: errMsg, at: 0)
+        let errNio = NIOAny(ByteBuffer.forString(errMsg))
+        ctx.write(errNio, promise: nil)
+        ctx.flush()
+        ctx.close(promise: nil)
+    }
+    
+    public func channelReadComplete(ctx: ChannelHandlerContext) {
+        ctx.flush()
+    }
+    
+    private func completeResponse(_ ctx: ChannelHandlerContext, trailers: HTTPHeaders?, promise: EventLoopPromise<Void>?) {
+        //let promise = self.keepAlive ? promise : (promise ?? ctx.eventLoop.newPromise())
+        if !self.keepAlive {
+            //promise!.futureResult.whenComplete {
+            ctx.close(promise: nil)
+            //}
+        }
+        //ctx.writeAndFlush(self.wrapOutboundOut(ByteBuffer.forString("0\r\n\r\n")), promise: promise)
+    }
+    
     
     // Solely for test purposes; remove before deployment
     private func printEnvVars(_ envVars: [String:String]) {
@@ -212,20 +233,6 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
             print("\(key)=\(envVars[key]!)")
         }
-    }
-
-    public func channelReadComplete(ctx: ChannelHandlerContext) {
-        ctx.flush()
-    }
-    
-    private func completeResponse(_ ctx: ChannelHandlerContext, trailers: HTTPHeaders?, promise: EventLoopPromise<Void>?) {
-        //let promise = self.keepAlive ? promise : (promise ?? ctx.eventLoop.newPromise())
-        if !self.keepAlive {
-            //promise!.futureResult.whenComplete {
-            ctx.close(promise: nil)
-            //}
-        }
-        //ctx.writeAndFlush(self.wrapOutboundOut(ByteBuffer.forString("0\r\n\r\n")), promise: promise)
     }
 
 }

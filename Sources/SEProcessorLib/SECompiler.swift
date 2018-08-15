@@ -118,13 +118,6 @@ public class SECompiler {
         }
         
         // Add SECore objects
-        // var seCoreObjects = SECompiler.getSECoreObjectsList()
-        // seCoreObjects = seCoreObjects.map{"\(SEGlobals.SECORE_LOCATION)/\($0)"}
-        // args.append(contentsOf: seCoreObjects)
-
-        // add the libFile
-        //args.append("\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.a")
-
         args.append(self.seCoreObjectList!)
         
         // let cmd = args.joined(separator: " ")
@@ -260,7 +253,6 @@ public class SECompiler {
                 }
             }
             
-            
             // Check the executable against SECore and main.swift
             let executableAttrs = try fileManager.attributesOfItem(atPath: "\(SECompiler.binaryCompilationLocation)/\(SECompiler.entryPointFilename)")
             if let executableCreationDate = executableAttrs[.modificationDate] as? Date {
@@ -279,13 +271,12 @@ public class SECompiler {
                 let mainAttrs = try fileManager.attributesOfItem(atPath: SECompiler.seMain)
                 if let mainCreationDate = mainAttrs[.modificationDate] as? Date {
 
-                    // Main is more recent than executbale
+                    // Main is more recent than executbale, not current
                     if mainCreationDate > executableCreationDate {
                         return false
                     }
                 }
             }
-            
         }
         catch {
             SEShell.stdErr.write(error.localizedDescription)
@@ -293,8 +284,7 @@ public class SECompiler {
         }
         
         
-        
-        // All required files are newer than .sources file
+        // All required files are newer than .sources file or executable
         return true
     }
 	
@@ -386,14 +376,16 @@ extension SECompiler {
         if let filename = path.components(separatedBy: "/").last, let execName = filename.components(separatedBy: ".").first {
             SECompiler.executableName = execName
             SECompiler.relativePath = String(path.dropFirst(SEGlobals.DOCUMENT_ROOT.count).dropLast("/\(filename)".count))
-            return
         }
-        
-        // Could not get path componenets, can't proceed
-        exit(-1)
+        else {
+            // Could not get path componenets, can't proceed
+            exit(-1)
+        }
     }
     
 }
+
+
 
 
 /*  Private helper methods for displaying errors and outputting code   */
