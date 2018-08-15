@@ -15,8 +15,12 @@ These instructions will get you a copy of the project up and running on your loc
 ## Prerequisites
 What are the dependencies we need to get this to work?  
 
-* __OSX 10.13.2__
-* __Linux 14.04, 16.04, 16.10__
+OS  | Version
+------------- | -------------
+OSX | 10.13.2
+Linux  | 14.04
+Linux  | 16.04
+Linux  | 16.10
 
 ## Installing
 Installing and starting the server:
