@@ -67,6 +67,31 @@ open class RequestContext {
         return filteredHandlers
     }
 
+}
+
+
+// Public convenience methods
+extension RequestContext {
     
+    public func get(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "GET", withRoute: route, handler: handler)
+    }
+    
+    public func post(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "POST", withRoute: route, handler: handler)
+    }
+    
+    public func put(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "PUT", withRoute: route, handler: handler)
+    }
+    
+    public func delete(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "DELETE", withRoute: route, handler: handler)
+    }
+    
+    public func patch(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "PATCH", withRoute: route, handler: handler)
+    }
+
 }
 
