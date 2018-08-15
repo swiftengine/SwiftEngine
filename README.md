@@ -30,6 +30,15 @@ Programming your site:
 ## Built With
 * __SwiftNIO__
 
+## Contributing
+Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+Contributing to SwiftEngine Project:
+
+1. git clone `git clone https://github.com/brandon-holden/SwiftEngine.git`
+    1. `git checkout dev`
+2. run following command to install `sudo ./install.sh`
+3. run following command to start the SwiftEngine server `./run.sh`
+
 ## Authors
 * Spartak Buniatyan - Founder - [SpartakB](https://github.com/spartakb)
 * Branden Holden - Developer - [brandone-holden](https://github.com/brandon-holden)
