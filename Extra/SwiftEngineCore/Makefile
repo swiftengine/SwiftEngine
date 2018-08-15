@@ -6,7 +6,7 @@ build_dir = $(pwd)/.build
 release_dir = $(build_dir)/release
 SECORE_LOCATION = $(release_dir)
 
-default:
+default: build
 
 build:
 	$(swift) build --product SwiftEngine -c release -Xswiftc -g 
