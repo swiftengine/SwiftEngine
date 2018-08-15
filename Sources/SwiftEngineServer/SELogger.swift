@@ -74,12 +74,8 @@ public class SELogger {
     
     // Logs an unexpected crash
     private class func logUnexpectedCrash(_ str: String) {
-        let fileUrl = URL(fileURLWithPath: "\(SELogger.basePath)/\(SELogger.internalErrorLogName)")
         let str = "Unexpected crash with string: \(str)"
-        do {
-            try str.write(to: fileUrl, atomically: false, encoding: .utf8)
-        }
-        catch { }
+        SELogger.writeOut(str, toFile: SELogger.internalErrorLogName)
     }
     
     
