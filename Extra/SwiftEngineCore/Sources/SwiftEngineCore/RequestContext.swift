@@ -2,9 +2,10 @@
 
 open class RequestContext {
     
-    private (set) public var response = Response()
+    lazy private (set) public var request: Request = Request(ctx: self)
+    lazy private (set) public var response: Response = Response(ctx: self)
     public var requestHandlers = [RequestHandler]()
-    private (set) public var request = Request()
+    
     
     public init() {
         
@@ -66,6 +67,31 @@ open class RequestContext {
         return filteredHandlers
     }
 
+}
+
+
+// Public convenience methods
+extension RequestContext {
     
+    public func get(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "GET", withRoute: route, handler: handler)
+    }
+    
+    public func post(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "POST", withRoute: route, handler: handler)
+    }
+    
+    public func put(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "PUT", withRoute: route, handler: handler)
+    }
+    
+    public func delete(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "DELETE", withRoute: route, handler: handler)
+    }
+    
+    public func patch(withRoute route:String = "*", handler: @escaping (Request, Response)->() ) {
+        self.addHandler(forMethod: "PATCH", withRoute: route, handler: handler)
+    }
+
 }
 

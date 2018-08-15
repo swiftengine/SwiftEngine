@@ -29,14 +29,19 @@ class SEShell{
         //var envShell = ProcessInfo.processInfo.environment
         task.arguments = args
         task.environment = envVars
-        if #available(OSX 10.13, *) {
-            task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            try! task.run()
-        }
-        else {
+        #if os(OSX)
+            if #available(OSX 10.13, *) {
+                task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                try! task.run()
+            }
+            else {
+                task.launchPath = "/usr/bin/env"
+                task.launch()
+            }
+        #elseif os(Linux)
             task.launchPath = "/usr/bin/env"
             task.launch()
-        }
+        #endif
         task.waitUntilExit()
         let dataStdOut = pipeStdOut.fileHandleForReading.readDataToEndOfFile()
         let stdOut = String(data: dataStdOut, encoding: String.Encoding.utf8) ?? "<NO OUTPUT FROM BASH>"
@@ -66,14 +71,19 @@ class SEShell{
             task.standardOutput = pipeStdOut
             task.standardError = pipeStdErr
             task.arguments = ["/bin/bash","-c", cmd]//args
-            if #available(OSX 10.13, *) {
-                task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-                try! task.run()
-            }
-            else {
+            #if os(OSX)
+                if #available(OSX 10.13, *) {
+                    task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                    try! task.run()
+                }
+                else {
+                    task.launchPath = "/usr/bin/env"
+                    task.launch()
+                }
+            #elseif os(Linux)
                 task.launchPath = "/usr/bin/env"
                 task.launch()
-            }
+            #endif
             task.waitUntilExit()
             let dataStdOut = pipeStdOut.fileHandleForReading.readDataToEndOfFile()
             let stdOut = String(data: dataStdOut, encoding: String.Encoding.utf8) ?? "<NO OUTPUT FROM BASH>"

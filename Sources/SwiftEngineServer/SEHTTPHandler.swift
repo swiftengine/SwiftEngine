@@ -1,6 +1,11 @@
 import Foundation
 import NIO
 import NIOHTTP1 
+import NIOFoundationCompat
+#if os(Linux)
+import Glibc
+#endif
+//import Darwin
 
 
 public final class SEHTTPHandler: ChannelInboundHandler {
@@ -18,15 +23,21 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     // CGI information
     private let documentRoot: String
     private let pathToSEProcessor: String
-    
 
+    //Request body file handler
+    private var requestId : String!
+    private var requestBodyFilePath : String!
+    private var requestBodyFileHandle : Foundation.FileHandle!//NIO.FileHandle?
+    
     public init(fileIO: NonBlockingFileIO, htdocsPath: String,
-                documentRoot: String = "/Users/Brandon",
-                pathToSEProcessor: String = "/Users/Brandon/Documents/Code/SwiftEngine/se2_seprocessor/.build/x86_64-apple-macosx10.10/debug/SEProcessor") {
+                documentRoot: String = "/var/swiftengine/www",
+                pathToSEProcessor: String = "/usr/bin/SEProcessor") {
         self.fileIO = fileIO
         self.htdocsPath = htdocsPath
         self.documentRoot = documentRoot
         self.pathToSEProcessor = pathToSEProcessor
+
+        //print("SEHTTPHandler init")
     }
 
     public func handlerAdded(ctx: ChannelHandlerContext) {
@@ -34,8 +45,14 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
 
-        let outboudDataOut = data //self.wrapOutboundOut(data)
-        ctx.fireChannelRead(outboudDataOut)
+        
+        //print("SEHTTPHandler channelRead")
+        // let outboudDataOut = data //self.wrapOutboundOut(data)
+        // ctx.fireChannelRead(outboudDataOut)
+
+        if requestId == nil {
+            requestId = randomAlphaNumericString(length: 32)
+        }
 
         let reqPart = self.unwrapInboundIn(data)
         switch reqPart {
@@ -43,9 +60,29 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 		    self.keepAlive = request.isKeepAlive
             self.infoSavedRequestHead = request
             break
-        case .body:
+        case .body(buffer: var buff):
+
+            // create the file handle if it doesnt already exists
+            if requestBodyFileHandle == nil {
+                requestBodyFilePath = "/tmp/" + requestId
+                FileManager.default.createFile(atPath:  requestBodyFilePath, contents: nil, attributes: nil)  
+                requestBodyFileHandle = FileHandle(forWritingAtPath: requestBodyFilePath)
+            }
+
+            // write to the file handle
+            if  let _data = buff.readData(length: buff.readableBytes) {
+                requestBodyFileHandle.write(_data)
+                // let niofile = NIO.FileHandle(descriptor: _file.fileDescriptor)
+                // self.fileIO.write(fileHandle: niofile, buffer: buf, eventLoop: ctx.eventLoop)
+            }
             break
         case .end:
+
+            // close the request body filehandle if we have one open
+            if requestBodyFileHandle != nil {
+                requestBodyFileHandle.closeFile()
+                requestBodyFileHandle = nil
+            }
             // Ensure we got the request head
             guard let request = self.infoSavedRequestHead else {
                 let errMsg = "Could not process request"
@@ -77,8 +114,13 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                             "GATEWAY_INTERFACE" : "CGI/1.1",
                             "SCRIPT_FILENAME" : "\(self.documentRoot)" + "\(scriptName)",
                             "SERVER_PROTOCOL" : "HTTP/1.1",
-                            "SERVER_NAME" : "localhost"
+                            "SERVER_NAME" : "localhost",
+                            
             ]
+
+            if let requestId = requestId {
+                envVars["REQUEST_ID"] = requestId
+            }
             
             
             // Change all headers to env vars
@@ -89,38 +131,61 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
             
             // Add the server ip and port
-            if let serverAddr = ctx.localAddress {
-                if let ip = serverAddr.ip {
-                    envVars["SERVER_ADDR"] = ip
-                }
-                if let port = serverAddr.port {
-                    envVars["SERVER_PORT"] = "\(port)"
-                }
+            guard let serverAddr = ctx.localAddress, let serverIp = serverAddr.ip, let serverPort = serverAddr.port else {
+                return
             }
+            envVars["SERVER_ADDR"] = serverIp
+            envVars["SERVER_PORT"] = "\(serverPort)"
+            
             
             // Add the remote IP and port
-            if let remoteAddr = ctx.remoteAddress {
-                if let ip = remoteAddr.ip {
-                    envVars["REMOTE_ADDR"] = ip
-                }
-                if let port = remoteAddr.port {
-                    envVars["REMOTE_PORT"] = "\(port)"
+            guard let remoteAddr = ctx.remoteAddress, let remoteIp = remoteAddr.ip, let remotePort = remoteAddr.port else {
+                return
+            }
+            envVars["REMOTE_ADDR"] = remoteIp
+            envVars["REMOTE_PORT"] = "\(remotePort)"
+            
+
+            //self.printEnvVars(envVars)
+            var args = [String]()
+            if let seProcessorLocation = ProcessInfo.processInfo.environment["SEPROCESSOR_LOCATION"] {
+                args.append(seProcessorLocation)
+                if !FileManager.default.fileExists(atPath: seProcessorLocation){
+                    print("SEProcessor file does not exist: \(seProcessorLocation)")
                 }
             }
+            else {
+                args.append(self.pathToSEProcessor)
+            }
             
-            //self.printEnvVars(envVars)
-            
+            if let seCoreLocation = ProcessInfo.processInfo.environment["SECORE_LOCATION"] {
+                args.append("-secore-location=\(seCoreLocation)")
+            }
+
             // Run it
-            var (stdOut, _, _) = SEShell.run([self.pathToSEProcessor], envVars: envVars)
+            var (stdOut, stdErr, status) = SEShell.run(args, envVars: envVars)
+
+            let output = (status == 0 ? stdOut : stdErr)
+
+            //print("stdError: \(output)")
+            
+            // Log request
+            SELogger.log(request: request, ip: remoteIp, stdOut: output)
+            
             
             // Write it out
             var buf = ctx.channel.allocator.buffer(capacity: stdOut.utf8.count)
-            buf.set(string: stdOut, at: 0)
-            let nio = NIOAny(ByteBuffer.forString(stdOut))
+            buf.set(string: output, at: 0)
+            let nio = NIOAny(ByteBuffer.forString(output))
             ctx.write(nio, promise: nil)
             ctx.flush()
             ctx.close(promise: nil)
             //self.completeResponse(ctx, trailers: nil, promise: nil)
+
+            if requestBodyFilePath != nil {
+                try? FileManager.default.removeItem(atPath:  requestBodyFilePath)  
+            }
+
             break
         }
     }
@@ -163,6 +228,28 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         //ctx.writeAndFlush(self.wrapOutboundOut(ByteBuffer.forString("0\r\n\r\n")), promise: promise)
     }
 
+}
+
+
+func randomAlphaNumericString(length: Int = 7)->String{
+
+    enum s {
+        static let c = Array("abcdefghjklmnpqrstuvwxyz12345789")
+        static let k = UInt32(c.count)
+    }
+
+    var result = [Character](repeating: "a", count: length)
+
+    for i in 0..<length {
+        #if os(OSX)
+            let r = Int(arc4random_uniform(s.k))
+        #else
+            let r = Int(random() % Int(s.k))
+        #endif
+        result[i] = s.c[r]
+    }
+
+    return String(result)
 }
 
 

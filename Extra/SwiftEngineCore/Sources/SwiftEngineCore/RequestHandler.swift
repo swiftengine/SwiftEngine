@@ -58,13 +58,13 @@ open class RequestHandler {
         var routeParamDict = RouteParams()
         
         // now loop through our array and make sure we match
-        for i in 0..<handlerRouteArr.count{
+        for i in 0..<handlerRouteArr.count {
             
             let requestRouteComponent = requestRouteArr[i]
             let handlerRouteComponent = handlerRouteArr[i]
             
             // if both componenets are empty then continue on to the next one
-            if(requestRouteComponent.count == 0 && handlerRouteComponent.count == 0){
+            if (requestRouteComponent.count == 0 && handlerRouteComponent.count == 0) {
                 continue
             }
             
@@ -74,7 +74,7 @@ open class RequestHandler {
             }
             
             // if this component is a param name match
-            if(handlerRouteComponent.count > 0 && handlerRouteComponent.first! == ":"){
+            if (handlerRouteComponent.count > 0 && handlerRouteComponent.first! == ":"){
                 
                 var paramName = handlerRouteComponent       // get the parameter name
                 paramName.remove(at: paramName.startIndex)   // remove the collons mark from the parameter name
