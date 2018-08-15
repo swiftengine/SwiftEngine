@@ -32,6 +32,10 @@ public class SELogger {
     private static let errorLogName = "error.log"
     
     
+    // This is for our own debugging purposes
+    private static let internalErrorLogName = "unexpected_error.log"
+    
+    
     
 //    internal class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
 //        let message = "File: \(file)  Line: \(line)  Message: \(message)"
@@ -45,10 +49,16 @@ public class SELogger {
         let headers = components[0]
         let responseLine = headers.components(separatedBy: .newlines)[0]
         
-        guard responseLine.count > 1 else { return }
+        guard responseLine.count > 1 else {
+            SELogger.logUnexpectedCrash(stdOut)
+            return
+        }
         let responseCode = responseLine.components(separatedBy: " ")[1]
         
-        guard components.count > 1 else { return }
+        guard components.count > 1 else {
+            SELogger.logUnexpectedCrash(stdOut)
+            return
+        }
         let body = components[1]
 
         
@@ -61,6 +71,17 @@ public class SELogger {
             SELogger.logError(ip: ip, errorMessage: errorMsg)
         }
     }
+    
+    // Logs an unexpected crash
+    private class func logUnexpectedCrash(_ str: String) {
+        let fileUrl = URL(fileURLWithPath: "\(SELogger.basePath)/\(SELogger.internalErrorLogName)")
+        let str = "Unexpected crash with string: \(str)"
+        do {
+            try str.write(to: fileUrl, atomically: false, encoding: .utf8)
+        }
+        catch { }
+    }
+    
     
     // Log a server request
     private class func log(ip: String, requestStr: String, responseCode code: String, bodyLength length: Int) {
