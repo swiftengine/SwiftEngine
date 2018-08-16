@@ -2,10 +2,10 @@
 Completely Autonoumous and Downtime Resilient Serverside-Swift Platform for App Development
 
 ## Features
-* ___Swift on Back-End___ - Improve productivity by using the modern Swift language for all your app's development needs ([learn more](/learnmore))
-* ___Auto compilation___ - Increase the speed of your endpoints as each file is individually compiled. If a file has not been modified since it was last used, it won't need to be recompiled ([learn more](/learnmore))
-* ___Automated Routing Logic___ - Avoid writing custom routers; SwiftEngine will automagically route each request to the desired file ([learn more](/learnmore))
-* ___Uptime Resiliency___ - Reduce risk by leveraging a fail-safe and high-availability operating environment where each client requests functions independently ([learn more](/learnmore))
+* ___Swift on Back-End___ - Improve productivity by using the modern Swift language for all your app's development needs 
+* ___Auto compilation___ - Increase the speed of your endpoints as each file is individually compiled. If a file has not been modified since it was last used, it won't need to be recompiled 
+* ___Automated Routing Logic___ - Avoid writing custom routers; SwiftEngine will automagically route each request to the desired file 
+* ___Uptime Resiliency___ - Reduce risk by leveraging a fail-safe and high-availability operating environment where each client requests functions independently 
 * ___Easy web based run-time error analysis___ - Save time by not having to dig through shell dumps; SwiftEngine displays the full error trace on your browser for easy debugging
 
 ## Getting Started
