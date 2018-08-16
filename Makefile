@@ -121,5 +121,7 @@ setup-system:
 	chmod -R a+w /var/log/swiftengine
 
 
-
-
+clean:
+	swift package clean
+	rm Package.resolved
+	make -C Extra/SwiftEngineCore clean

@@ -18,3 +18,7 @@ build:
 package:
 
 install:
+
+clean:
+	swift package clean
+	rm Package.resolved
