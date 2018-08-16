@@ -2,17 +2,12 @@ import Foundation
 
 public class SECompiler {
     
-    static let swiftc = "/opt/apple/swift/latest/usr/bin/swiftc"
-	static let swift = "/opt/apple/swift/latest/usr/bin/swift"
+    static let swiftc = "/opt/apple/swift-latest/usr/bin/swiftc"
+	static let swift = "/opt/apple/swift-latest/usr/bin/swift"
     
     // Location of the main.swift file
-    static let seMain = "/Users/Brandon/main.swift"
+    static let seMain = "/etc/swiftengine/magic/main.swift"
     
-    // Path to the SECore library
-    static let pathToSECore = "/Users/Brandon/Documents/Code/SwiftEngine/se2_secore/"
-    static var pathToSECoreObjectsList: String {
-        return "\(SECompiler.pathToSECore)objectslist2.txt"
-    }
     
     /*
      Ex. DOCUMENT_ROOT: /usr/me/
@@ -23,37 +18,94 @@ public class SECompiler {
     */
     static var relativePath: String!
     static var executableName: String!
-    static let binaryCompilationLocation = "/var/cache/swiftengine/www/"
+    static var seCoreObjectList: String!
+    static let binaryCompilationLocation = "/var/swiftengine/.cache"
+    static let entryPointFilename = "default"
     
     static var fullExecutablePath: String {
-        return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
+        return "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)/\(SECompiler.executableName!)"
     }
     
-    static var requireList: [String] = []
+    static var requireList: Set<String> = []
     
     // This method is the *only* way to access SECompiler
     public class func excuteRequest(path: String) {
         // Set executable name
         SECompiler.setPathComponents(forPath: path)
+        
+        SECompiler.setSECoreObjectLibrary()
+        
         // Execute request
         SECompiler._excuteRequest(path: path)
     }
+    
+    private class func setSECoreObjectLibrary() {
+        #if os(OSX)
+            SECompiler.seCoreObjectList = "\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.dylib"
+        #else
+            SECompiler.seCoreObjectList = "\(SEGlobals.SECORE_LOCATION)/libSwiftEngine.so"
+        #endif
+    }
+
+    class func dump(_ str: String, _ doExit: Bool = false){
+        print(str)
+        if(doExit){
+            exit(0)
+        }
+    }
+    
+    // Solely for test purposes; remove before deployment
+    private class func printEnvVars(_ envVars: [String:String]) {
+        let keys = envVars.keys.sorted()
+        var startedHttp = false
+        var finishedHttp = false
+        var startedServer = false
+        dump("\nEnv Vars:")
+        for key in keys {
+            if !startedHttp && key.starts(with: "HTTP") {
+                startedHttp = true
+                dump("")
+            }
+            if startedHttp && !finishedHttp && !key.starts(with: "HTTP") {
+                finishedHttp = true
+                dump("")
+            }
+            else if finishedHttp && !startedServer && key.starts(with: "SERVER") {
+                startedServer = true
+                dump("")
+            }
+            dump("\(key)=\(envVars[key]!)")
+        }
+        dump("", true)
+    }
+    
 	
     private class func compileFile(fileUri : String) {
         
-        let fullLocationPath = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)\(SECompiler.executableName!)"
+        //dump("Binary Location: \(binaryCompilationLocation)\nRelative Path: \(relativePath!)\nExecutable: \(executableName!)\nFull exe path: \(fullExecutablePath)", true)
+        
+        //SECompiler.printEnvVars(ProcessInfo.processInfo.environment)
         
         var args = [
-			swiftc, "-v", "-g",
-			"-o", fullLocationPath, // Compile binary to this location
-            "-I", "\(SECompiler.pathToSECore)./.build/release/", // Add path to SECore for search path
-			"-Xcc", "-v",
+			SECompiler.swiftc, 
+                "-v", 
+                "-g",
+            //"-Xcc", "-num-threads", "-Xcc", "25",
+			"-o", SECompiler.fullExecutablePath, // Compile binary to this location
+            "-I", "\(SEGlobals.SECORE_LOCATION)", // Add path to SECore for search path
+			//"-Xcc", "-v",
             SECompiler.seMain, // This should always be the first source file so it is treated as the primary file
         ]
-        
+
+
+        #if os(OSX)
+            args.append("-sdk")
+            args.append("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk")
+        #endif
+
         do {
             let contents = try SECompiler.getFileContents(path: fileUri)
-            SECompiler.requireList.append(fileUri)
+            SECompiler.requireList.insert(fileUri)
             SECompiler.generateRequireList(path: fileUri, content: contents)
             args.append(contentsOf: SECompiler.requireList)
             
@@ -66,57 +118,67 @@ public class SECompiler {
         }
         
         // Add SECore objects
-        let seCoreObjects = SECompiler.getSECoreObjectsList()
-        args.append(contentsOf: seCoreObjects)
-
+        args.append(self.seCoreObjectList!)
+        
+        //printEnvVars(ProcessInfo.processInfo.environment)
+        
+        //dump(SECompiler.relativePath!)
+        //dump(SECompiler.fullExecutablePath, true)
+        
+        
+        // let cmd = args.joined(separator: " ")
+        // print("cmd: \(cmd)")
 
 		// Run the executable
-        let (_, stdErr, status) = SEShell.run(args)
+        let newArgs = args //["/usr/bin/env"]
+        let (_, stdErr, status) = SEShell.run(newArgs)
         if (status != 0) {
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
         }
         
+
 	}
     
     
     
-    // Get's the necessary SECore objects from the specified path
-    private class func getSECoreObjectsList() -> [String] {
-        if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
-            var ret = [String]()
-            let files = contents.components(separatedBy: "\n")
-            ret.append(contentsOf: files)
-            return ret
-        }
-        return [String]()
-    }
+//    // Get's the necessary SECore objects from the specified path
+//    private class func getSECoreObjectsList() -> [String] {
+//        if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
+//            var ret = [String]()
+//            var files = contents.components(separatedBy: .newlines)
+//            files = files.filter(){ $0 != ""}
+//            ret.append(contentsOf: files)
+//            return ret
+//        }
+//        return [String]()
+//    }
     
     
 
     // DFS-search starting with the entry point file to generate the list of required files
     private class func generateRequireList(path: String, content: String) {
         // Get lines of the file
-        let lines = content.components(separatedBy: "\n")
+        let lines = content.components(separatedBy: .newlines)
         for (lineNum, line) in lines.enumerated() {
             // Starts with the require key
-            if line.starts(with: SEConstant.REQUIRE_KEY) {
+            if line.starts(with: SEGlobals.REQUIRE_KEY) {
                 
                 // Split components to get the require file name
-                let lineComponents = line.components(separatedBy: SEConstant.REQUIRE_KEY)
+                let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
                 for file in lineComponents {
                     // File isn't empty and it's not in the require list
-                    if !file.isEmpty && !SECompiler.requireList.contains(file) {
+                    if (!file.isEmpty) && (!SECompiler.requireList.contains(file)) {
                         
                         // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
-                        var requirePath = "\(SEConstant.DOCUMENT_ROOT)"
+                        var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
                         if !file.starts(with: "/") {
-                            requirePath += "/\(SECompiler.relativePath!)"
+                            requirePath += "\(SECompiler.relativePath!)"
                         }
                         requirePath += "\(file)"
                         
                         // Add require to the list
-                        SECompiler.requireList.append(requirePath)
+                        SECompiler.requireList.insert(requirePath)
                         
                         do {
                             // Recurse
@@ -137,7 +199,7 @@ public class SECompiler {
     
     
     // Write out the .sources file to the compileBinaryLocation
-    private class func createSourcesFile(requiresList: [String]) {
+    private class func createSourcesFile(requiresList: Set<String>) {
         
         // Get path that is not part of the document root and make dirs for that
         let cacheDir = "\(SECompiler.binaryCompilationLocation)\(SECompiler.relativePath!)"
@@ -174,13 +236,10 @@ public class SECompiler {
             return false
         }
         
+
         do {
-            // Read sources from sourcesFile
-            var sources = [String]()
-            let allSources = try String(contentsOfFile: sourcesFile, encoding: .utf8).split(separator: "\n")
-            for source in allSources {
-                sources.append(String(source))
-            }
+            // Check the required files
+            let sources = try String(contentsOfFile: sourcesFile, encoding: .utf8).components(separatedBy: .newlines)
             
             // Get date of .sources file
             let sourcesFileAttrs = try fileManager.attributesOfItem(atPath: SECompiler.fullExecutablePath)
@@ -199,13 +258,39 @@ public class SECompiler {
                     }
                 }
             }
+            
+            // Check the executable against SECore and main.swift
+            let executableAttrs = try fileManager.attributesOfItem(atPath: "\(SECompiler.binaryCompilationLocation)/\(SECompiler.entryPointFilename)")
+            if let executableCreationDate = executableAttrs[.modificationDate] as? Date {
+                
+                // SECoreLib
+                let seCoreLibAttrs = try fileManager.attributesOfItem(atPath: SECompiler.seCoreObjectList!)
+                if let seCoreCreationDate = seCoreLibAttrs[.modificationDate] as? Date {
+
+                    // If the SECorelib is more recent than the executable, not current
+                    if seCoreCreationDate > executableCreationDate {
+                        return false
+                    }
+                }
+
+                // main.swift
+                let mainAttrs = try fileManager.attributesOfItem(atPath: SECompiler.seMain)
+                if let mainCreationDate = mainAttrs[.modificationDate] as? Date {
+
+                    // Main is more recent than executbale, not current
+                    if mainCreationDate > executableCreationDate {
+                        return false
+                    }
+                }
+            }
         }
         catch {
             SEShell.stdErr.write(error.localizedDescription)
             exit(-1)
         }
         
-        // All required files are newer than .sources file
+        
+        // All required files are newer than .sources file or executable
         return true
     }
 	
@@ -218,7 +303,7 @@ public class SECompiler {
     
     
 	private class func listOfObjectFiles(baseDir: String) throws -> [String] {
-		let text = try getFileContents(path: baseDir + "/objectslist.txt")
+		let text = try SECompiler.getFileContents(path: baseDir + "/objectslist.txt")
 		// split each line into array item, filter out any empty lines, and append absolute URLs
 		let list = text.components(separatedBy: "\n").filter{$0 != ""}.map{baseDir + "/" + $0}
 		return list
@@ -227,7 +312,7 @@ public class SECompiler {
     
     
 	private class func listOfModulemapFiles(baseDir:String) throws -> [String] {
-		let text = try getFileContents(path: baseDir + "/modulemaplist.txt")
+		let text = try SECompiler.getFileContents(path: baseDir + "/modulemaplist.txt")
 		// split each line into array item, filter out any empty lines, and append absolute URLs
 		let list = text.components(separatedBy: "\n").filter{$0 != ""}.map{baseDir + "/" + $0}
 		return list
@@ -242,20 +327,14 @@ public class SECompiler {
 	
     
     
-	private class func debugOut(_ resp : Any){
+	private class func debugOut(_ resp : Any) {
 		print("Content-type: text/html")
 		print("")
 		print("<pre>")
 		print("\(resp)")
 		print("</pre>")
 	}
-    
-    
-    
-    private class func getErrors(_ error: String) -> String {
-        let arrError = matchError(error)
-        return decoreError(sError: error, errors: arrError)
-    }
+
 
 }
 
@@ -264,37 +343,58 @@ public class SECompiler {
 extension SECompiler {
     
     private class func _excuteRequest(path: String) {
-        
+
         //SECompiler.compileFile(fileUri: path)
         
         // Check if binary if current; if not, compile file
         if !SECompiler.isBinaryCurrent() {
             SECompiler.compileFile(fileUri: path)
         }
+
         
         // Execute the binary
-        SEShell.runBinary(fullExecutablePath)
+        #if false
+            let (stdOut, stdErr, status) = SEShell.run([fullExecutablePath])
+            if (status != 0) {
+                print(stdErr)
+                // let output = SECompiler.getErrors(stdErr)
+                // SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
+            }
+            print(status)
+            print(stdErr)
+            print(stdOut)
+        #else
+            SEShell.runBinary(fullExecutablePath)
+
+        #endif
         exit(0)
     }
     
     
     private class func setPathComponents(forPath path: String) {
-        // Get executable name
-        if let filename = path.split(separator: "/").last, let execName = filename.split(separator: ".").first {
-            SECompiler.executableName = String(execName)
-            SECompiler.relativePath = String(path.suffix(from: SEConstant.DOCUMENT_ROOT.endIndex).dropFirst().dropLast("\(execName).swift".count))
-            return
+        // Get executable name and relative path
+        if let filename = path.components(separatedBy: "/").last, let execName = filename.components(separatedBy: ".").first {
+            SECompiler.executableName = execName
+            SECompiler.relativePath = String(path.dropFirst(SEGlobals.DOCUMENT_ROOT.count).dropLast("/\(filename)".count))
         }
-        
-        // Could not get path componenets, can't proceed
-        exit(-1)
+        else {
+            // Could not get path componenets, can't proceed
+            exit(-1)
+        }
     }
     
 }
 
 
+
+
 /*  Private helper methods for displaying errors and outputting code   */
 extension SECompiler {
+    
+    private class func getErrors(_ error: String) -> String {
+        let arrError = SECompiler.matchError(error)
+        return SECompiler.decoreError(sError: error, errors: arrError)
+    }
     
     private class func matchError(_ error: String) -> [NSTextCheckingResult] {
         let errorPattern =     "\n(?<filePath>[^:\n]+)" +            // get the filename
@@ -339,20 +439,22 @@ extension SECompiler {
     }
     
     private class func decoreError(sError: String, errors: [NSTextCheckingResult]) -> String {
-        var    output = "<h3>\(errors.count) issue\(errors.count > 1 ? "s" : "") found on this page</h3>"
+        let numErrors = errors.count
+    
+        var output = "<h3>\(numErrors) issue\(numErrors > 1 ? "s" : "") found on this page</h3>"
         
-        for i in 0..<errors.count {
+        for i in 0..<numErrors {
             let error = errors[i]
             output += "<br><br><hr size=1>"
-            output += "<h4>Issue #\(i + 1) : <font color=#dd0000>\(getTagValue(sError, textCheckingResult: error, key: 4)): \(getTagValue(sError, textCheckingResult: error, key: 5))</font> </h4>"
-            output += "In file <b><font color=#dd0000>\(getTagValue(sError, textCheckingResult: error, key: 1))</font></b> on line \(getTagValue(sError, textCheckingResult: error, key: 2))<br>"
+            output += "<h4>Issue #\(i + 1) : <font color=#dd0000>\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 4)): \(SECompiler.getTagValue(sError, textCheckingResult: error, key: 5))</font> </h4>"
+            output += "In file <b><font color=#dd0000>\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 1))</font></b> on line \(SECompiler.getTagValue(sError, textCheckingResult: error, key: 2))<br>"
             output += "<div style=\"margin:5px 0px 15px 0px; font-weight: bold;\">"
-            output += getCodeSnippetFromFile(fileName: getTagValue(sError, textCheckingResult: error, key: 1), lineNo: Int(getTagValue(sError, textCheckingResult: error, key: 2))!)
+            output += SECompiler.getCodeSnippetFromFile(fileName: SECompiler.getTagValue(sError, textCheckingResult: error, key: 1), lineNo: Int(SECompiler.getTagValue(sError, textCheckingResult: error, key: 2))!)
             output += "Compiler diagnostics: "
-            output += "<span style=\"color:#dd0000;\">\(getTagValue(sError, textCheckingResult: error, key: 5)) </span>"
+            output += "<span style=\"color:#dd0000;\">\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 5)) </span>"
             output += "</div>"
             output += "<pre style=\"font-size:.7em\" class=\"language-swift\" ><code>"
-            output += "\(getTagValue(sError, textCheckingResult: error, key: 6))"
+            output += "\(SECompiler.getTagValue(sError, textCheckingResult: error, key: 6))"
             output += "</code></pre>"
         }
         return output
@@ -390,7 +492,8 @@ extension SECompiler {
             }
             output += "</code></pre>"
             return output
-        } catch {
+        }
+        catch {
             
         }
         return ""

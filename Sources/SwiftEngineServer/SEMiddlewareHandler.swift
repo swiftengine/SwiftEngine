@@ -60,9 +60,9 @@ class SEMiddlewareHandler: ChannelOutboundHandler {
 
     public func write(ctx: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         track()
-        var binaryData = unwrapOutboundIn(data)
-        var str = binaryData.getString(at: 0, length: binaryData.readableBytes)
-        print("writeData:: \(str)")
+        let binaryData = unwrapOutboundIn(data)
+        let str = binaryData.getString(at: 0, length: binaryData.readableBytes)
+        print("writeData:: \(String(describing: str))")
         ctx.write(data, promise: promise)
     }
 
@@ -81,7 +81,7 @@ class SEMiddlewareHandler: ChannelOutboundHandler {
         var string = "HTTP/1.1 200 OK\ncontent-length: 12\n\nHello World!"
         var buf = ctx.channel.allocator.buffer(capacity: string.utf8.count)
         buf.set(string: string, at: 0)
-        var nio1 = NIOAny(ByteBuffer.forString(string)) //NIOAny(buf)
+        let nio1 = NIOAny(ByteBuffer.forString(string)) //NIOAny(buf)
         print("NIOAny :: \(nio1)")
         ctx.writeAndFlush(nio1, promise: nil)
         //ctx.write(nio1, promise: nil)

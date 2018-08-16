@@ -1,37 +1,53 @@
-# SwiftEngine Design Overview
+# SwiftEngine.io
+Serverside-Swift Platform for App Development
 
-SwiftEngine is aimed at being a highly resilient and scalable server-side platform, as such the goal of the platform is to overcome some of the inherent vulnerabilities of other modern platforms currently in the market. A key example of what this means for production deployments is that each request and endpoint is contained within it's own process, a crash for one request does not bring down the entire server; similarly a memory leaks or other bugs are ephemeral and only live for the duration of the request, instead of transcending in the lifetime of the server.   
+## Features
+* ___Swift on Back-End___ - Improve productivity by using the modern Swift language for all your app's development needs ([learn more](/something))
+* ___Uptime Resiliency___ - Reduce risk by leveraging a fail-safe and high-availability operating environment where each client requests functions independently ([learn more](/something))
+* ___API Support___ - Save time and increase productivity by leveraging popular APIs out of the box ([learn more](/something))
+* ___Automated Routing Logic___ - Avoid writing custom routers; SwiftEngine will automagically route each request to the desired file ([learn more](/something))
+* ___Auto compilation___ - Increase the speed of your endpoints as each file is individually compiled. If a file has not been modified since it was last used, it won't need to be recompiled ([learn more](/something))
+* ___Easy web based run-time error analysis___ - Save time by not having to dig through shell dumps; SwiftEngine displays the full error trace on your browser for easy debugging
 
-In addition to being a highly resilient and scalable, SwiftEngine is also highly performant due to the pre-compiled nature of all the endpoints, because under the hood SwiftEngine is using Swift as its core language, all code that is executed on the server is a compiled (native object code) version of the source code.  Thus no processing power is spent on maintain a runtime environment. 
+## Getting Started
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-Lastly, by not least(ly), SwiftEngine aim and being a highly productive environment, while abstracting away some of the mundane build and devops related tasks.  As such, SwiftEngine is an complete autonomous solution.  This means that no manual compilation and configuration is required by the developer.  SwiftEngine is built from ground up in order automatically build its source files, with full debugging capabilities.   This means that as a developer, all one has to do is save their .swift files within the designated site directory and SwiftEngine will handle the rest.   Any compile time and runtime errors, are also handles by SwiftEngine, and are provided to the developer is beautiful and easy to follow interface.  With SwiftEngine, long gone are the day of manual compilation and dealing with shell log dumps, simple save a file and request the URL, SwiftEngine will automatically compile, cache, and serve the requested results.  
+## Prerequisites
+What are the dependencies we need to get this to work?  
 
-In order to achieve these goals, there is a slight change of a paradigm in methodology of how a typically Swift project functions.  The primary shift is in the independently asynchronous processing of the various endpoints.  This means that each one of the endpoints are compiled and maintained on their own, thus an introduction of a bug within one endpoint has no effect on the functionality of the entire site, but it's rather contained to that specific endpoint only.
+OS  | Version
+------------- | -------------
+macOS | 10.13+
+Ubuntu  | 14.04, 16.04, 16.10
 
+## Installing
+#### Linux
+`wget -qO se swiftengine.io/se && sudo bash se` 
+#### Mac
+`curl -??? se swiftengine.io/se && sudo bash se`
 
-## Routing Logic
+## Using
 
-One of the root concepts in SwiftEngine is its highly sophisticated routing logic.  Out of the box, SwiftEngine has a smart routing logic which will automatically attempt to match the http requests to a specific .swift file as it's endpoint.  However, for more advanced usage, a Router.swift file can be included within the root folder of the site and can be used for close control and customization of the request handling of the server.
+Programming your site:
+1. From the browser, enter the following url `http://<machine_ip>:8887` (by default this is `localhost:8887`)
+2. Make edits to your site by editing `/var/swiftengine/www/default.swift`
+3. Any swift file you place in `/var/swiftengine/www` will be accessible through the browser without the `.swift` extension
 
-![N|Solid](http://www.plantuml.com/plantuml/svg/bP5FSzem4CNl-XGxES4bt4dR96tAj8Sc6K8_W2gjiH9Bwqgh05FuxaKMs9v0_i01nEhjy_izNmMMdgEjH7WohfPUMf2ApRFX5VmJ05-bUffxYav_eueyB4h3cERaDVey-rDjHGBWnaXBJXzTWUx-sEgrzxJeZpQYbsZxpOODkHofjp_tSjLe4uOO_vZDxc6AVoC6tlugDC-enw9ahiUZaIOhZJjNP4UVS2bjNU6N2s4A64mfClhpi305Gs4g15oQmE5o25oYWy4Amr10ByZPuKf5SwFEceW0oVMNP5NkdA0W3pudU-cQFeFl-vD6bgfi_c0LC1dz3E2Rnu4bZV0P0dkZ68uQJLunWe6ZV9L7Jfj206n4TodoKFGmhoEJbMmKPE34b-dsDIyCbnJRsXXTCEGEagMLjlN3fa_kfFKQQInah3XxdcgNYJjRdwbGvt2b392DEpIuF0gd2GFirk4btqbuyDQhp87VJYmTSOc-5tbGigtMZ_LyNRlv-Z6GMoEhuGTGKB-7yV0AniSeyc4Zacmd429LCxxtf30a6WsuH1KPstuVsdx3XGXCjH0fntYA7BrB8I6mPACQJIkPT9BRknbCxdxVta39N3Vg642HtgklqEbeg_y0)
+## Built With
+* __SwiftNIO__
 
-Just to do a walk-through example for the automatic routing when an extension is not specified (for example: `http://somedomain.com/componenet1/component2/componenet3/componenet4`), since a Swift file can serve as the base executable in various positions within the URL path, the automatic URL router will use the following logic, and select the first available in the flowing order.
+## Contributing
+Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+Contributing to SwiftEngine Project:
 
-![N|Solid](http://www.plantuml.com/plantuml/svg/pPFFRjGm4CRlVefHJzaSkkBFAJtGGgaujTMoF82n9yseYITunbrMLTyTEsp1GdlWK24i9R4_V-FVvrW-5xLHqpGQkQSmssWdi4xfWNGFZmRWlNNtTv5Jy1zuv0YxWHIBpj5Z_Abz7RCfQvTa9mx-Q0bKyqTABsBaNIqzcIfHVYifSO37Fz1tqUwBTzc6wJvjjxUmmMy9HVFN8JsWxyoWEdVhjV24dYTBuTJnjCxFp043wgjVVNrToM-g_jipOypl72SNIVDAIWusd1GZD86Xfn41loi6AIQPqL5Fw5SdIt3geQcfRNigE-grRPyhILJUhK073D3iKLO6bjPyVEvvLEk6FC1Hi43BH1a6Jxqv0gcszgzvzQzySVRVe-jJ_4zYhDlMOs_Jg2yIfpgG9zDShSp1OqmfwsuZEnG16tmce4kA40-Nv7F1Bt0vCw8yczpA4jq6DSK0rpTRkBhvSdq9vHQ1gDKauDZZmN-UoMaQVm00)
+1. Fork the repo by clicking the button at the top left of the screen
+2. After it has finished forking, click the green "Clone or download" button, copy the URL displayed, and enter the command `git clone [URL]`
+3. Make the changes you wish and push them back to your repo
+4. Submit a pull request
 
-## SwiftEngine Compiler Processor Logic 
+## Authors
+* Spartak Buniatyan - Founder - [SpartakB](https://github.com/spartakb)
+* Brandon Holden - Developer - [brandon-holden](https://github.com/brandon-holden)
 
-### `Require` directive 
-In order to maintain resiliency and endpoint independence, SwiftEngine takes a slightly different approach to how an individual files are compiled.   With a typical Swift based project, all the files are compiled together, and as a result the entire app either works or it does not.  Within SwiftEngine each one of the requested endpoints is compiled independently, thus a bug introduced in one area of the code does not affect any other unrelated endpoints.   In order to achieve this, the developer needs to specify (within each file) any of the other files within SwiftEngine that need to be used within that specific Swift file. The SEProcessor will iteratively process all the files with `require` directive, thus the developer only needs to specifies what is needed with the Swift page that needs to use it.
-
-As an example, if example1.swift file depends on a class that is declared within example2.swift file, then the developer will need to specify the dependency with example1.swift file via a custom `require` directive such as this `//se: require directory/example2.swift`.   This will inform SwiftEngine compilation preprocessor logic that Example2.swift file should be used along with Example.swift file during the compilation process.
-
-Following is a high-level logic for SwiftEngine preprocessor `require` directives:
-
-![N|Solid](http://www.plantuml.com/plantuml/svg/RL9DRzim3BthL_3e14C3xEWC_UY6dOVj5p0HdH2LHLUIcsN3_lj8sQWJD08IIoJVu-EJ7dF1LCO-kFp2SS24FU2-y1kNC_nr0C-uVpaa6QF_Aa4Id8vSoEAIFAKfjWjQfB5lZBr4VnC2I_uMz2abELs6_haBHVfVkB34AkaIVqXuhhKsXcj_91gIx2bdpVso6FcjQpag6WF_8LYl4xsEd0W2vx9U0oQbs6GgMzSyhPodWlkZg_is4Nh89-uAT1n8cJgE7Z24XKSfl7xCCygjsoXL2tCEilJqNOBAtT1lx8T0d-ygtzOvxg2vpGATcVUmWdAa2CsPyie1w6Y4nO4kWtvPkEytqu43tK_qAj6qdwjp8DsLN1lyYhjoKiW4JHHhPQj5xw781yEsSzuCcdPH2a7Ymz74JUjdrMezhZgRYTaqPOu7c6yA9C8xaDHy3P1fDZJtWzWbJj1FWD4lnJroBFghbMFar_7M_UO5OCI783iCDNit9oZwEeIR3zpfpis6s_CDwamlwNgOH1qbYZe2u1jom5sW1pLpCT9DNAvvNjwLxTi1SvxDE74vSlmekyZyyFRI3rgPN6EbTTGaKYhSXhE06L43gwtBHGRtg9t7Flm7)
-
-
-
-# SECGIHandler
-
-A description of this package.
+## License
+This project is licensed under the Mozilla Public License Version 2.0 - see the LICENSE.md file for details
