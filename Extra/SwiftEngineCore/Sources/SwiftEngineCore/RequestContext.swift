@@ -2,9 +2,10 @@
 
 open class RequestContext {
     
-    private (set) public var response = Response()
+    lazy private (set) public var request: Request = Request(ctx: self)
+    lazy private (set) public var response: Response = Response(ctx: self)
     public var requestHandlers = [RequestHandler]()
-    private (set) public var request = Request()
+    
     
     public init() {
         

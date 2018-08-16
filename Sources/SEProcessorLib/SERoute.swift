@@ -9,7 +9,7 @@ public enum ExcutableType {
 
 public class SERoute {
     public init(directory: String) {
-        SEConstant.DOCUMENT_ROOT = directory
+        SEGlobals.DOCUMENT_ROOT = directory
     }
 
     public init() {
@@ -17,12 +17,12 @@ public class SERoute {
     }
 
     public func doesRouterExist() -> Bool {
-        let routerPath = "\(SEConstant.DOCUMENT_ROOT)/Router.swift"
+        let routerPath = "\(SEGlobals.DOCUMENT_ROOT)/Router.swift"
         return SECommon.checkExitsFile(filePath: routerPath)
     }
 
     public func getExecutableType(_ requestFile: String) -> (ExcutableType, String) {
-        let excutePath = SEConstant.DOCUMENT_ROOT + requestFile
+        let excutePath = SEGlobals.DOCUMENT_ROOT + requestFile
         if requestFile.range(of: ".") != nil {
             let fileExtension = requestFile.components(separatedBy: ".")[1]
       
@@ -36,7 +36,7 @@ public class SERoute {
         else {
             // Add extension .swift
             let paths = requestFile.components(separatedBy: "/")
-            var tempPath = SEConstant.DOCUMENT_ROOT
+            var tempPath = SEGlobals.DOCUMENT_ROOT
             for i in 1..<paths.count {
                 tempPath += "/\(paths[i])"
                 let path = "\(tempPath).swift"
@@ -45,7 +45,7 @@ public class SERoute {
                 }
             }
           
-            let path = SEConstant.DOCUMENT_ROOT + requestFile + "/default.swift"
+            let path = SEGlobals.DOCUMENT_ROOT + requestFile + "/default.swift"
             if SECommon.checkExitsFile(filePath: path) {
                 return (.swift, path)
             }

@@ -3,9 +3,19 @@ import SEProcessorLib
 
 func main(){
     let environment = ProcessInfo.processInfo.environment
-    let fileRequest = environment["SCRIPT_NAME"]!
-    guard let documentRoot = environment["DOCUMENT_ROOT"] else { return }
-    SEConstant.DOCUMENT_ROOT = documentRoot
+    
+    guard let documentRoot = environment["DOCUMENT_ROOT"] else {
+        print("No document root")
+        exit(0)
+    }
+    guard let fileRequest = environment["SCRIPT_NAME"] else {
+        print("No script name")
+        exit(0)
+    }
+    SEGlobals.DOCUMENT_ROOT = documentRoot
+    if let seCoreLocation = getArg("secore-location") {
+        SEGlobals.SECORE_LOCATION = seCoreLocation
+    }
     
     let seRoute = SERoute()
     let seResponse = SEResponse()
@@ -25,31 +35,22 @@ func main(){
     }
 }
 
+func getArg(_ key: String) -> String?{
+    for argument in CommandLine.arguments {
+        switch true {
+        case argument.hasPrefix("-\(key)="):
+            let val = argument.components(separatedBy: "=")
+            if val.count > 1 {
+                return val[1]
+            }
+        default: continue
+        }
+        
+    }
+    
+    return nil
+}
 
-// var requireList: [String] = []
-// func getRequireList(content: String) -> [String] {
-//   var tempList: [String] = []
-//   if content.range(of: SEConstant.REQUIRE_KEY) != nil {
-//     let tempArr = content.components(separatedBy: SEConstant.REQUIRE_KEY)
-//     for item in tempArr {
-//       var require = item.components(separatedBy: "\n")[0]
-//       if !require.isEmpty && 
-//       SECommon.checkExitsFile(filePath: "\(SEConstant.DOCUMENT_ROOT)/\(require)"){ 
-//         if !requireList.contains(require) {
-//           tempList.append(require)
-//           requireList.append(require)
-//           let string = try! SECompiler.getFileContents(path: "\(SEConstant.DOCUMENT_ROOT)/\(require)")
-//           var tempRequireList = getRequireList(content: string)
-//           if tempRequireList.count > 0 {
-//             tempList.append(contentsOf: tempRequireList)
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   return tempList
-// }
 
 
 main()
