@@ -20,7 +20,7 @@ macOS | 10.13+
 Ubuntu  | 14.04, 16.04, 16.10
 
 ## Getting started with the project
-1. Clone this repo: `git clone https://github.com/spartakb/SwiftEngine.git`
+1. Clone this repo: `git clone https://github.com/swiftengine/SwiftEngine.git`
 2. `cd` to `SwiftEngine` directory and run `sudo ./install.sh`
 3. Run `./run.sh`
 This should start the server running and listening on port `8887`
