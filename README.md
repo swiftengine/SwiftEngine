@@ -1,3 +1,6 @@
+:raising_hand: __Hey there!__   
+Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
+
 # SwiftEngine.io
 Completely Autonoumous, Highly Scalable, and Downtime Resilient Serverside-Swift Platform for Production Grade App Development
 
