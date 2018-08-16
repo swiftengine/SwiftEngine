@@ -85,7 +85,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
             // Ensure we got the request head
             guard let request = self.infoSavedRequestHead else {
-                self.errorInChannelRead(ctx)
+                self.errorInChannelRead(ctx, errorMessage: "Could not process request: No request head")
                 return
             }
             
@@ -130,7 +130,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Add the server ip and port
             guard let serverAddr = ctx.localAddress, let serverIp = serverAddr.ip, let serverPort = serverAddr.port else {
-                self.errorInChannelRead(ctx)
+                self.errorInChannelRead(ctx, errorMessage: "Could not process request: No server IP and/or port")
                 return
             }
             envVars["SERVER_ADDR"] = serverIp
@@ -139,7 +139,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             
             // Add the remote IP and port
             guard let remoteAddr = ctx.remoteAddress, let remoteIp = remoteAddr.ip, let remotePort = remoteAddr.port else {
-                self.errorInChannelRead(ctx)
+                self.errorInChannelRead(ctx, errorMessage: "Could not process request: No remote IP and/or port")
                 return
             }
             envVars["REMOTE_ADDR"] = remoteIp
@@ -182,7 +182,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             //self.completeResponse(ctx, trailers: nil, promise: nil)
 
             if self.requestBodyFilePath != nil {
-                try? fileManager.removeItem(atPath:  self.requestBodyFilePath)
+                try? fileManager.removeItem(atPath: self.requestBodyFilePath)
             }
             break
         }
@@ -190,8 +190,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     
     
     // Generic display error function
-    private func errorInChannelRead(_ ctx: ChannelHandlerContext) {
-        let errMsg = "Could not process request"
+    private func errorInChannelRead(_ ctx: ChannelHandlerContext, errorMessage errMsg: String = "Could not process request") {
         var errBuf = ctx.channel.allocator.buffer(capacity: errMsg.utf8.count)
         errBuf.set(string: errMsg, at: 0)
         let errNio = NIOAny(ByteBuffer.forString(errMsg))
