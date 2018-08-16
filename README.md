@@ -1,12 +1,11 @@
 # SwiftEngine.io
-Serverside-Swift Platform for App Development
+Completely Autonoumous and Downtime Resilient Serverside-Swift Platform for App Development
 
 ## Features
-* ___Swift on Back-End___ - Improve productivity by using the modern Swift language for all your app's development needs ([learn more](/something))
-* ___Uptime Resiliency___ - Reduce risk by leveraging a fail-safe and high-availability operating environment where each client requests functions independently ([learn more](/something))
-* ___API Support___ - Save time and increase productivity by leveraging popular APIs out of the box ([learn more](/something))
-* ___Automated Routing Logic___ - Avoid writing custom routers; SwiftEngine will automagically route each request to the desired file ([learn more](/something))
-* ___Auto compilation___ - Increase the speed of your endpoints as each file is individually compiled. If a file has not been modified since it was last used, it won't need to be recompiled ([learn more](/something))
+* ___Swift on Back-End___ - Improve productivity by using the modern Swift language for all your app's development needs ([learn more](/learnmore))
+* ___Auto compilation___ - Increase the speed of your endpoints as each file is individually compiled. If a file has not been modified since it was last used, it won't need to be recompiled ([learn more](/learnmore))
+* ___Automated Routing Logic___ - Avoid writing custom routers; SwiftEngine will automagically route each request to the desired file ([learn more](/learnmore))
+* ___Uptime Resiliency___ - Reduce risk by leveraging a fail-safe and high-availability operating environment where each client requests functions independently ([learn more](/learnmore))
 * ___Easy web based run-time error analysis___ - Save time by not having to dig through shell dumps; SwiftEngine displays the full error trace on your browser for easy debugging
 
 ## Getting Started
@@ -20,11 +19,11 @@ OS  | Version
 macOS | 10.13+
 Ubuntu  | 14.04, 16.04, 16.10
 
-## Installing
-#### Linux
-`wget -qO se swiftengine.io/se && sudo bash se` 
-#### Mac
-`curl -??? se swiftengine.io/se && sudo bash se`
+## Getting started with the project
+1. Clone this repo: `git clone https://github.com/spartakb/SwiftEngine.git`
+2. `cd` to `SwiftEngine` directory and run `sudo ./install.sh`
+3. Run `./run.sh`
+This should start the server running and listening on port `8887`
 
 ## Using
 
