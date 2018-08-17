@@ -33,9 +33,47 @@ This should start the server running and listening on port `8887`
 ## Using
 
 Programming your site:
-1. From the browser, enter the following url `http://<machine_ip>:8887` (by default this is `localhost:8887`)
-2. Make edits to your site by editing `/var/swiftengine/www/default.swift`
-3. Any swift file you place in `/var/swiftengine/www` will be accessible through the browser without the `.swift` extension
+1. Create a new `mypage.swift` file within the `/var/swiftengine/www/` directory (see example below)
+2. From the browser, enter the following url `http://<machine_ip>:8887/mypage` (by default this is `localhost:8887`)
+
+That's it!  No compilation or dealing with shell dumps required!  Your requested endpoints will be automagically compiled during the first request, and results will be shown.
+
+Any swift file you place in `/var/swiftengine/www` will be accessible through the browser without the `.swift` extension.
+Read more about SwiftEngine's autonomous system and routing logic ([here](/TechnicalOverview.md))
+
+## Example of a SwiftEngine based `.swift` file
+
+```
+// Import SwiftEngine essentials
+import SwiftEngine
+
+
+// specify other required files for this file
+//se: require /common.swift
+
+// Entry Point function; where all code begins
+func entryPoint(ctx: RequestContext) {
+	
+	// add GET handlers to the request context
+	ctx.addHandler(forMethod:"GET", withRoute:"*"){
+		req, res in
+		res.write("Hello from SwiftEngine! ")
+	}
+	
+	// add POST handlers to the request context
+	ctx.addHandler(forMethod:"POST", withRoute:"*"){
+		req, res in
+		res.write("Handle for POST request method")
+	}
+	
+	// add catch-all handlers to the request context
+	ctx.addHandler(forMethod:"*", withRoute:"*"){
+		req, res in
+		res.write("Handle for catch-all")
+	}
+
+}
+```
 
 ## Built With
 * __SwiftNIO__
