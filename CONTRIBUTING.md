@@ -34,5 +34,9 @@ $ uname -a
 Darwin Kernel Version 17.7.0: Thu Jun 21 22:53:14 PDT 2018; root:xnu-4570.71.2~1/RELEASE_X86_64 x86_64
 ```
 
+# Code Of Conduct
+
+All contributions to SwiftEngine must be respectful and free of offensive language. Any contribution containing offensive language will be rejected, and users may me blocked. 
+
 We thank you for taking the time to help improve SwiftEngine!
 
