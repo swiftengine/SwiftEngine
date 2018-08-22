@@ -1,7 +1,7 @@
 :raising_hand: __Hey there!__   
 Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
 
-[![SwiftEngine](https://imgur.com/a/NT7MAwu)](http://swift-engine.io)
+[![SwiftEngine](https://i.imgur.com/h4yrTEN.png)](https://swiftengine.io)
 
 ## Features
 
