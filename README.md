@@ -34,7 +34,7 @@ Programming your site:
 3. Any swift file you place in `/var/swiftengine/www` will be accessible through the browser without the `.swift` extension
 
 ## Built With
-* __SwiftNIO__
+* [**SwiftNIO**](https://github.com/apple/swift-nio)
 
 ## Contributing
 Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
