@@ -1,8 +1,7 @@
 :raising_hand: __Hey there!__   
 Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
 
-# [SwiftEngine.io](https://swiftengine.io)
-Completely Autonoumous, Highly Scalable, and Downtime Resilient Serverside-Swift Platform for Production Grade App Development
+[![SwiftEngine](https://i.imgur.com/h4yrTEN.png)](https://swiftengine.io)
 
 ## Features
 
@@ -53,19 +52,19 @@ import SwiftEngine
 
 // Entry Point function; where all code begins
 func entryPoint(ctx: RequestContext) {
-	
+
 	// add GET handlers to the request context
 	ctx.addHandler(forMethod:"GET", withRoute:"*"){
 		req, res in
 		res.write("Hello from SwiftEngine! ")
 	}
-	
+
 	// add POST handlers to the request context
 	ctx.addHandler(forMethod:"POST", withRoute:"*"){
 		req, res in
 		res.write("Handle for POST request method")
 	}
-	
+
 	// add catch-all handlers to the request context
 	ctx.addHandler(forMethod:"*", withRoute:"*"){
 		req, res in
