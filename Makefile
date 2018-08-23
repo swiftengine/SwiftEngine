@@ -19,10 +19,10 @@ run: build
 
 
 build-swiftengineserver:
-	$(swift) build --product SwiftEngineServer
+	$(swift) build --product SwiftEngineServer -Xswiftc -g 
 
 build-seprocessor:
-	$(swift) build --product SEProcessor
+	$(swift) build --product SEProcessor -Xswiftc -g 
 
 build-secore:
 	make -C Extra/SwiftEngineCore build
