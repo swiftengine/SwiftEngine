@@ -90,4 +90,5 @@ We would love to hear your thoughts and feedback about SwiftEngine. If you would
 * Brandon Holden - Developer - [brandon-holden](https://github.com/brandon-holden)
 
 ## License :notes:
+
 This project is licensed under the Mozilla Public License Version 2.0 - see the [LICENSE](/LICENSE.txt) file for details
