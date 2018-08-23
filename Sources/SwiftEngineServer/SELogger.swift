@@ -36,13 +36,6 @@ public class SELogger {
     private static let internalErrorLogName = "unexpected_error.log"
     
     
-    
-//    internal class func log(message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
-//        let message = "File: \(file)  Line: \(line)  Message: \(message)"
-//        SELogger.logError(ip: "idk", errorMessage: message, logLevel: level)
-//    }
-    
-    
     // Log
     internal class func log(request: HTTPRequestHead, ip: String, stdOut: String) {
         let components = stdOut.components(separatedBy: "\n\n")
@@ -73,7 +66,7 @@ public class SELogger {
     }
     
     // Logs an unexpected crash
-    private class func logUnexpectedCrash(_ str: String) {
+    internal class func logUnexpectedCrash(_ str: String) {
         let str = "Unexpected crash with string: \(str)"
         SELogger.writeOut(str, toFile: SELogger.internalErrorLogName)
     }

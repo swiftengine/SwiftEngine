@@ -65,7 +65,10 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             // create the file handle if it doesnt already exists
             if self.requestBodyFileHandle == nil {
                 self.requestBodyFilePath = "/tmp/" + self.requestId
-                FileManager.default.createFile(atPath: self.requestBodyFilePath, contents: nil, attributes: nil)
+                let success = FileManager.default.createFile(atPath: self.requestBodyFilePath, contents: nil, attributes: nil)
+                if (!success) {
+                    SELogger.logUnexpectedCrash("Could not create tmp request body file at: \(self.requestBodyFilePath). Please check permission settings.")
+                }
                 self.requestBodyFileHandle = FileHandle(forWritingAtPath: self.requestBodyFilePath)
             }
 
