@@ -3,6 +3,7 @@
 :raising_hand: __Hey there!__   
 Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
 
+
 [![SwiftEngine](https://i.imgur.com/h4yrTEN.png)](https://swiftengine.io)
 
 ## Features :heart_eyes:
@@ -26,6 +27,7 @@ macOS | 10.13+
 Ubuntu  | 14.04, 16.04, 16.10
 
 ## Getting started with the project :thumbsup:
+
 1. Clone this repo: `git clone https://github.com/swiftengine/SwiftEngine.git`
 2. `cd` to `SwiftEngine` directory and run `sudo ./install.sh`
 3. Run `./run.sh`
