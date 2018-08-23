@@ -81,18 +81,15 @@ func entryPoint(ctx: RequestContext) {
 ## Built With :sunny:
 * [**SwiftNIO**](https://github.com/apple/swift-nio)
 
-## Contributing :family:
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
-Contributing to SwiftEngine Project:
 
-1. Fork the repo by clicking the button at the top left of the screen
-2. After it has finished forking, click the green "Clone or download" button, copy the URL displayed, and enter the command `git clone [URL]`
-3. Make the changes you wish and push them back to your repo
-4. Submit a pull request
+
+## Contributing :family:
+We would love to hear your thoughts and feedback about SwiftEngine. If you would like to contribute to our project or have an issue you would like to open, please visit our [CONTRIBUTING](/CONTRIBUTING.md) document for more details.
 
 ## Authors :factory:
 * Spartak Buniatyan - Founder - [SpartakB](https://github.com/spartakb)
 * Brandon Holden - Developer - [brandon-holden](https://github.com/brandon-holden)
 
 ## License :notes:
-This project is licensed under the Mozilla Public License Version 2.0 - see the LICENSE.md file for details
+
+This project is licensed under the Mozilla Public License Version 2.0 - see the [LICENSE](/LICENSE.txt) file for details
