@@ -82,7 +82,6 @@ func entryPoint(ctx: RequestContext) {
 * [**SwiftNIO**](https://github.com/apple/swift-nio)
 
 
-
 ## Contributing :family:
 We would love to hear your thoughts and feedback about SwiftEngine. If you would like to contribute to our project or have an issue you would like to open, please visit our [CONTRIBUTING](/CONTRIBUTING.md) document for more details.
 
