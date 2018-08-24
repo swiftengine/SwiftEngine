@@ -46,7 +46,7 @@ Read more about SwiftEngine's autonomous system and routing logic ([here](/Techn
 
 ## Example of a SwiftEngine based `.swift` file  :trophy:
 
-```
+```swift
 // Import SwiftEngine essentials
 import SwiftEngine
 
@@ -60,7 +60,7 @@ func entryPoint(ctx: RequestContext) {
 	// add GET handlers to the request context
 	ctx.addHandler(forMethod:"GET", withRoute:"*"){
 		req, res in
-		res.write("Hello from SwiftEngine! ")
+		res.write("Hello from SwiftEngine!")
 	}
 
 	// add POST handlers to the request context
