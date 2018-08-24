@@ -8,6 +8,25 @@
 import Foundation
 import NIOHTTP1
 
+public protocol SEFileManagerProtocol {
+    func fileExists(atPath path: String) -> Bool
+    func contentsOfDirectory(atPath path: String) throws -> [String]
+    func moveItem(atPath: String, toPath: String) throws
+}
+
+class SEFileManager: SEFileManagerProtocol {
+    public init() {}
+    public func fileExists(atPath path: String) -> Bool {
+        return FileManager.default.fileExists(atPath: path)
+    }
+    public func contentsOfDirectory(atPath path: String) throws -> [String] {
+        return try FileManager.default.contentsOfDirectory(atPath: path)
+    }
+    public func moveItem(atPath: String, toPath: String) throws {
+        try FileManager.default.moveItem(atPath: atPath, toPath: toPath)
+    }
+}
+
 public class SELogger {
     
     public enum LogLevel: Int {
@@ -21,6 +40,7 @@ public class SELogger {
         emerg
     }
     
+    public static var fileManager: SEFileManagerProtocol = SEFileManager()
     private static let cal = Calendar(identifier: .gregorian)
     
     // This shouldn't be a property of the class but doing it for now
@@ -92,7 +112,7 @@ public class SELogger {
         let path = "\(SELogger.basePath)/\(file)"
         if let data = str.data(using: .utf8) {
             // File already exists
-            if FileManager.default.fileExists(atPath: path) {
+            if SELogger.fileManager.fileExists(atPath: path) {
                 if let fileHandle = FileHandle(forUpdatingAtPath: path) {
                     let size = fileHandle.seekToEndOfFile()
                     
@@ -126,8 +146,7 @@ public class SELogger {
     // Rotates logs with the specified name
     private class func rotateLogs() {
         do {
-            let fileManager = FileManager.default
-            let allLogs = try fileManager.contentsOfDirectory(atPath: SELogger.basePath)
+            let allLogs = try SELogger.fileManager.contentsOfDirectory(atPath: SELogger.basePath)
             let logTypes = [SELogger.accessLogName, SELogger.errorLogName]
             for name in logTypes {
                 // Have the relevant logs in reverse sorted order (i.e: ..., access.log.1, access.log.0, access.log) so increment number by 1
@@ -135,11 +154,11 @@ public class SELogger {
                 for file in logs {
                     // Get log number of the file
                     if let fileNumStr = file.chopPrefix("\(name)."), let fileNum = Int(fileNumStr) {
-                        try fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
+                        try SELogger.fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).\(fileNum+1)")
                     }
                     // Means we hit the currently active log; append 0
                     else {
-                        try fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
+                        try SELogger.fileManager.moveItem(atPath: "\(SELogger.basePath)/\(file)", toPath: "\(SELogger.basePath)/\(name).0")
                     }
                 }
             }

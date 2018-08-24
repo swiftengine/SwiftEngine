@@ -23,7 +23,10 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "SwiftEngineServer",
-            dependencies: ["NIO", "NIOHTTP1", "NIOFoundationCompat"]), 
+            dependencies: ["SwiftEngineServerLib", "NIO", "NIOHTTP1"]),
+        .target(
+            name: "SwiftEngineServerLib",
+            dependencies: ["NIO", "NIOHTTP1", "NIOFoundationCompat"]),
         .target(
             name: "SEProcessor",
             dependencies: ["SEProcessorLib"]),
@@ -32,7 +35,7 @@ let package = Package(
 			dependencies: []),
 
         .testTarget(
-            name: "SwiftEngineServerTests",
+            name: "SwiftEngineServerLibTests",
             dependencies: ["SwiftEngineServer"]),
         .testTarget(
             name: "SEProcessorLibTests",

@@ -1,5 +1,6 @@
 import NIO
 import NIOHTTP1
+import SwiftEngineServerLib
 
 // First argument is the program path
 var arguments = CommandLine.arguments.dropFirst(0) // just to get an ArraySlice<String> from [String]
@@ -110,7 +111,3 @@ try channel.closeFuture.wait()
 
 print("Server closed")
 
-
-  public func track(_ message: String = "", file: String = #file, function: String = #function, line: Int = #line ) { 
-    print("*** called from \(function) \(file):\(line) :: \(message) ") 
-  }

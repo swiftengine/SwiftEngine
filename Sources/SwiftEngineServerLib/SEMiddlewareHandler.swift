@@ -23,6 +23,10 @@ extension SEHTTPDataPart: Equatable {
     }
 }
 
+public func track(_ message: String = "", file: String = #file, function: String = #function, line: Int = #line ) {
+    print("*** called from \(function) \(file):\(line) :: \(message) ")
+}
+
 
 public typealias SEHTTPOutboundDataPart = SEHTTPDataPart<SEHTTPDataRequestHeadPart, IOData>
 
