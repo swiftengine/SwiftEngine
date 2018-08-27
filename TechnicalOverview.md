@@ -4,7 +4,6 @@ SwiftEngine is aimed at being a highly resilient and scalable server-side platfo
 
 In addition to being a resilient and scalable, SwiftEngine is also highly performant due to the pre-compiled nature of all the endpoints because under the hood SwiftEngine uses Swift as its core language. All code that is executed on the server is a compiled (native object code) version of the source code. Thus, no processing power is spent on maintain a runtime environment. 
 
-Lastly, by not least(ly), SwiftEngine aims at being a very productive environment while abstracting away some of the mundane build and devops related tasks. As such, SwiftEngine is a complete autonomous solution meaning that no manual compilation and configuration is required by the developer.  __SwiftEngine is built from ground up in order to automatically build its source files, with full debugging capabilities.__
 
 All the developer has to do is save their .swift files within the designated site directory and SwiftEngine will handle the rest. Any compile time and runtime errors are handled by SwiftEngine, and are provided to the developer in a beautiful and easy to follow interface. With SwiftEngine, long gone are the days of manual compilation and dealing with shell log dumps. Simply save a file and request the URL, and SwiftEngine will automatically compile, cache, and serve the requested results.  
 
