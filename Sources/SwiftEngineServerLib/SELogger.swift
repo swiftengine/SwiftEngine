@@ -8,24 +8,6 @@
 import Foundation
 import NIOHTTP1
 
-public protocol SEFileManagerProtocol {
-    func fileExists(atPath path: String) -> Bool
-    func contentsOfDirectory(atPath path: String) throws -> [String]
-    func moveItem(atPath: String, toPath: String) throws
-}
-
-class SEFileManager: SEFileManagerProtocol {
-    public init() {}
-    public func fileExists(atPath path: String) -> Bool {
-        return FileManager.default.fileExists(atPath: path)
-    }
-    public func contentsOfDirectory(atPath path: String) throws -> [String] {
-        return try FileManager.default.contentsOfDirectory(atPath: path)
-    }
-    public func moveItem(atPath: String, toPath: String) throws {
-        try FileManager.default.moveItem(atPath: atPath, toPath: toPath)
-    }
-}
 
 public class SELogger {
     
@@ -40,13 +22,21 @@ public class SELogger {
         emerg
     }
     
+    // FileHandle for dependency injection
+    public static var fileHandle: SEFileHandleProtocol = SEFileHandle()
+    
+    // FileManager for dependency injection
     public static var fileManager: SEFileManagerProtocol = SEFileManager()
+    
+    public static let defaultLogLevel: LogLevel = LogLevel.error
+    public static var maxLogSize = 10_000_000
+    
+
     private static let cal = Calendar(identifier: .gregorian)
     
     // This shouldn't be a property of the class but doing it for now
     private static let basePath = "/var/log/swiftengine"
-    private static let defaultLogLevel: LogLevel = LogLevel.error
-    private static let maxLogSize = 10_000_000
+    
     
     private static let accessLogName = "access.log"
     private static let errorLogName = "error.log"
@@ -74,7 +64,6 @@ public class SELogger {
         }
         let body = components[1]
 
-        
         // Log the request
         SELogger.log(ip: ip, requestStr: "\(request.method) \(request.version) \(request.uri)", responseCode: responseCode, bodyLength: body.count)
         
@@ -87,7 +76,7 @@ public class SELogger {
     
     // Logs an unexpected crash
     internal class func logUnexpectedCrash(_ str: String) {
-        let str = "Unexpected crash with string: \(str)"
+        let str = "Unexpected crash with string: \(str)\n"
         SELogger.writeOut(str, toFile: SELogger.internalErrorLogName)
     }
     
@@ -113,21 +102,25 @@ public class SELogger {
         if let data = str.data(using: .utf8) {
             // File already exists
             if SELogger.fileManager.fileExists(atPath: path) {
-                if let fileHandle = FileHandle(forUpdatingAtPath: path) {
-                    let size = fileHandle.seekToEndOfFile()
+                do {
+                    try SELogger.fileHandle.open(atPath: path)
+                    let size = try SELogger.fileHandle.seekToEndOfFile()
                     
                     // Rotate logs if larger than max alloted size
                     if size >= SELogger.maxLogSize {
                         // Close this file handle as it will change, rotate, then call this function again
-                        fileHandle.closeFile()
+                        try SELogger.fileHandle.closeFile()
                         SELogger.rotateLogs()
                         SELogger.writeOut(str, toFile: file)
                         return
                     }
-                    
-                    fileHandle.write(data)
-                    fileHandle.closeFile()
+                    try SELogger.fileHandle.write(data)
+                    try SELogger.fileHandle.closeFile()
                 }
+                catch {
+                    SELogger.logUnexpectedCrash("Error returned from SELogger: \(error.localizedDescription)")
+                }
+                
             }
             // File does not exist
             else {
@@ -162,18 +155,16 @@ public class SELogger {
                     }
                 }
             }
-            
         }
         catch {
             print("Error rotating logs")
-            exit(0)
+            exit(-1)
         }
 
     }
     
-    
     // Construct string with time information for access.log entries
-    private class func getLogTime() -> String {
+    public class func getLogTime() -> String {
         let now = Date()
         
         let day = SELogger.getDateComponentWithLengthTwo(.day, ofDate: now)
@@ -184,26 +175,14 @@ public class SELogger {
         let minute = SELogger.getDateComponentWithLengthTwo(.minute, ofDate: now)
         let second = SELogger.getDateComponentWithLengthTwo(.second, ofDate: now)
         
-        let timezone = TimeZone.current.secondsFromGMT() / 60 / 60
-        let timezoneStr: String
-        if timezone < 10 && timezone >= 0 {
-            timezoneStr = "0\(timezone)00"
-        }
-        else if timezone >= 10 {
-            timezoneStr = "\(timezone)00"
-        }
-        else if timezone < 0 && timezone > -10 {
-            timezoneStr = "-0\(abs(timezone))00"
-        }
-        else {
-            timezoneStr = "-\(abs(timezone))00"
-        }
+        let timezone = SELogger.getTimezoneString()
         
-        let dateStr = "\(day)/\(month)/\(year):\(hour):\(minute):\(second) \(timezoneStr)"
+        let dateStr = "\(day)/\(month)/\(year):\(hour):\(minute):\(second) \(timezone)"
         return dateStr
     }
     
-    private static func getErrorTime() -> String {
+    // Construct string with time information for error.log entries
+    public static func getErrorTime() -> String {
         let now = Date()
         
         let dayOfWeek = SELogger.getDay(SELogger.cal.component(.weekday, from: now))
@@ -214,23 +193,27 @@ public class SELogger {
         let minute = SELogger.getDateComponentWithLengthTwo(.minute, ofDate: now)
         let second = SELogger.getDateComponentWithLengthTwo(.second, ofDate: now)
         
+        let timezone = SELogger.getTimezoneString()
+        
+        let dateStr = "\(dayOfWeek) \(month) \(day) \(hour):\(minute):\(second) \(timezone)"
+        return dateStr
+    }
+    
+    // Get the timezone string
+    private static func getTimezoneString() -> String {
         let timezone = TimeZone.current.secondsFromGMT() / 60 / 60
-        let timezoneStr: String
         if timezone < 10 && timezone >= 0 {
-            timezoneStr = "0\(timezone)00"
+            return "0\(timezone)00"
         }
         else if timezone >= 10 {
-            timezoneStr = "\(timezone)00"
+            return "\(timezone)00"
         }
         else if timezone < 0 && timezone > -10 {
-            timezoneStr = "-0\(abs(timezone))00"
+            return "-0\(abs(timezone))00"
         }
         else {
-            timezoneStr = "-\(abs(timezone))00"
+            return "-\(abs(timezone))00"
         }
-        
-        let dateStr = "\(dayOfWeek) \(month) \(day) \(hour):\(minute):\(second) \(timezoneStr)"
-        return dateStr
     }
     
     

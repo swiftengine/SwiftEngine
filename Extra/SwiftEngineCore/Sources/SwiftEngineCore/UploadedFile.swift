@@ -20,22 +20,21 @@ public class UploadedFile{
     }
 
 
-    public func moveTo(path: String) throws{
+    public func moveTo(path: String) throws {
 
         let fileManager = FileManager.default
 
         if let tmpPath = self.tmpPath{
 
-            if(fileManager.fileExists(atPath:path)){
+            if (fileManager.fileExists(atPath:path)){
                 try fileManager.removeItem(atPath:path)
             }
 
             try fileManager.moveItem(atPath: tmpPath, toPath: path)
-
+            
             self.tmpPath = path // set the new temp path so future refrence is from here
 
         }
-        
     }
 
     

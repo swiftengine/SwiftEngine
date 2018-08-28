@@ -10,7 +10,7 @@ open class RequestHandler {
     private let request: Request  // doing this for dependency injection compatibility
     public var routeParams = RouteParams()
     
-    init(request: Request, method:String, route:String, handler: @escaping (Request, Response)->()){
+    init(request: Request, method:String, route:String, handler: @escaping (Request, Response)->() ){
         self.request = request
         self.method = method
         self.route = route
@@ -107,7 +107,6 @@ open class RequestHandler {
         }
         
         return true
-        
     }
     
 }
