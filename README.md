@@ -4,7 +4,7 @@
 Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
 
 
-[![SwiftEngine](https://i.imgur.com/h4yrTEN.png)](https://swiftengine.io)
+[![SwiftEngine](https://i.imgur.com/vq9BrIn.jpg?1)](https://swiftengine.io)
 
 ## Features :heart_eyes:
 
@@ -89,6 +89,10 @@ We would love to hear your thoughts and feedback about SwiftEngine. If you would
 ## Authors :factory:
 * Spartak Buniatyan - Founder - [SpartakB](https://github.com/spartakb)
 * Brandon Holden - Developer - [brandon-holden](https://github.com/brandon-holden)
+
+## Contact Us :factory:
+* You can reach us at github@swiftengine.io
+* For issues surrounding conduct. Email us - conduct@swiftengine.io
 
 ## License :notes:
 
