@@ -1,10 +1,9 @@
+[![SwiftEngine](https://i.imgur.com/vq9BrIn.jpg?1)](https://swiftengine.io)
+
 ### _We work for :star2:’s and :fork_and_knife:’s ... please Star our repo_
 
 :raising_hand: __Hey there!__   
 Please note: This project is still in Alpha Version and we’re actively working on forking over a lot of nifty features from SwiftEngine to make it compatible with SwiftNIO.   We appreciate any contributors or testers joining our project!
-
-
-[![SwiftEngine](https://i.imgur.com/vq9BrIn.jpg?1)](https://swiftengine.io)
 
 ## Features :heart_eyes:
 
