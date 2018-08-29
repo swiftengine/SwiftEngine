@@ -39,7 +39,7 @@ let package = Package(
             dependencies: ["SwiftEngineServer"]),
         .testTarget(
             name: "SEProcessorLibTests",
-            dependencies: ["SwiftEngineServer"]),
+            dependencies: ["SwiftEngineServer", "SEProcessorLib"]),
         .testTarget(
             name: "SEProcessorTests",
             dependencies: ["SwiftEngineServer"]),

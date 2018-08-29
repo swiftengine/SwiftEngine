@@ -46,26 +46,32 @@ public class SELogger {
     private static let internalErrorLogName = "unexpected_error.log"
     
     
-    // Log
+    public class func log() {
+        
+    }
+    
+    
+    // Log internally
     internal class func log(request: HTTPRequestHead, ip: String, stdOut: String) {
         let components = stdOut.components(separatedBy: "\n\n")
         let headers = components[0]
         let responseLine = headers.components(separatedBy: .newlines)[0]
         
         guard responseLine.count > 1 else {
-            SELogger.logUnexpectedCrash(stdOut)
+            SELogger.logUnexpectedCrash("Could not get response code. StdOut: \(stdOut)")
             return
         }
         let responseCode = responseLine.components(separatedBy: " ")[1]
         
         guard components.count > 1 else {
-            SELogger.logUnexpectedCrash(stdOut)
+            SELogger.logUnexpectedCrash("Could not get body. StdOut: \(stdOut)")
             return
         }
         let body = components[1]
 
         // Log the request
-        SELogger.log(ip: ip, requestStr: "\(request.method) \(request.version) \(request.uri)", responseCode: responseCode, bodyLength: body.count)
+        let requestStr = "\(request.method) \(request.version) \(request.uri)"
+        SELogger.log(ip: ip, requestStr: requestStr, responseCode: responseCode, bodyLength: body.count)
         
         // If response code isn't 200, error
         if responseCode != "200" {
@@ -76,8 +82,7 @@ public class SELogger {
     
     // Logs an unexpected crash
     internal class func logUnexpectedCrash(_ str: String) {
-        let str = "Unexpected crash with string: \(str)\n"
-        SELogger.writeOut(str, toFile: SELogger.internalErrorLogName)
+        SELogger.writeOut("\(str)\n", toFile: SELogger.internalErrorLogName)
     }
     
     

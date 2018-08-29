@@ -29,6 +29,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
     private var requestBodyFilePath : String!
     private var requestBodyFileHandle : Foundation.FileHandle!//NIO.FileHandle?
     
+    public var envVars = [String : String]()
+    
     public init(fileIO: NonBlockingFileIO, htdocsPath: String,
                 documentRoot: String = "/var/swiftengine/www",
                 pathToSEProcessor: String = "/usr/bin/SEProcessor") {
@@ -36,19 +38,12 @@ public final class SEHTTPHandler: ChannelInboundHandler {
         self.htdocsPath = htdocsPath
         self.documentRoot = documentRoot
         self.pathToSEProcessor = pathToSEProcessor
-
-        //print("SEHTTPHandler init")
     }
 
     public func handlerAdded(ctx: ChannelHandlerContext) {
     }
 
     public func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
-
-        
-        //print("SEHTTPHandler channelRead")
-        // let outboudDataOut = data //self.wrapOutboundOut(data)
-        // ctx.fireChannelRead(outboudDataOut)
 
         if self.requestId == nil {
             self.requestId = randomAlphaNumericString(length: 32)
@@ -74,7 +69,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
 
             // write to the file handle
             if let _data = buff.readData(length: buff.readableBytes) {
-                requestBodyFileHandle.write(_data)
+                self.requestBodyFileHandle.write(_data)
                 // let niofile = NIO.FileHandle(descriptor: _file.fileDescriptor)
                 // self.fileIO.write(fileHandle: niofile, buffer: buf, eventLoop: ctx.eventLoop)
             }
@@ -107,7 +102,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             let fileManager = FileManager.default
             
             // Set CGI environment variables
-            var envVars = [ "SCRIPT_NAME" : scriptName,
+            self.envVars = [ "SCRIPT_NAME" : scriptName,
                             "QUERY_STRING" : queryStr,
                             "REQUEST_URI" : request.uri,
                             "DOCUMENT_ROOT" : self.documentRoot,
@@ -116,11 +111,10 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                             "SCRIPT_FILENAME" : "\(self.documentRoot)" + "\(scriptName)",
                             "SERVER_PROTOCOL" : "HTTP/1.1",
                             "SERVER_NAME" : "localhost",
-                            
             ]
 
             if let requestId = requestId {
-                envVars["REQUEST_ID"] = requestId
+                self.envVars["REQUEST_ID"] = requestId
             }
             
             
@@ -128,7 +122,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             let headers = request.headers
             for header in headers {
                 let name = "HTTP_" + header.name.uppercased().replacingOccurrences(of: "-", with: "_")
-                envVars[name] = header.value
+                self.envVars[name] = header.value
             }
             
             // Add the server ip and port
@@ -136,8 +130,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                 self.errorInChannelRead(ctx, errorMessage: "Could not process request: No server IP and/or port")
                 return
             }
-            envVars["SERVER_ADDR"] = serverIp
-            envVars["SERVER_PORT"] = "\(serverPort)"
+            self.envVars["SERVER_ADDR"] = serverIp
+            self.envVars["SERVER_PORT"] = "\(serverPort)"
             
             
             // Add the remote IP and port
@@ -145,8 +139,8 @@ public final class SEHTTPHandler: ChannelInboundHandler {
                 self.errorInChannelRead(ctx, errorMessage: "Could not process request: No remote IP and/or port")
                 return
             }
-            envVars["REMOTE_ADDR"] = remoteIp
-            envVars["REMOTE_PORT"] = "\(remotePort)"
+            self.envVars["REMOTE_ADDR"] = remoteIp
+            self.envVars["REMOTE_PORT"] = "\(remotePort)"
             
 
             //self.printEnvVars(envVars)
@@ -167,7 +161,7 @@ public final class SEHTTPHandler: ChannelInboundHandler {
             }
 
             // Run it
-            var (stdOut, stdErr, status) = SEShell.run(args, envVars: envVars)
+            var (stdOut, stdErr, status) = SEShell.run(args, envVars: self.envVars)
 
             let output = (status == 0 ? stdOut : stdErr)
             

@@ -1,9 +1,13 @@
-
+//
+//  SEHTTPHandlerTests.swift
+//  SwiftEngineServerLibTests
+//
+//  Created by Brandon Holden on 8/24/18.
+//
 
 import XCTest
 import NIOHTTP1
 @testable import SwiftEngineServerLib
-
 
 
 private final class SEFileManagerTestUtil: SEFileManagerProtocol {
@@ -87,7 +91,7 @@ class SELoggerTest: XCTestCase {
             XCTAssertEqual(response, str)
         }
         else {
-            XCTAssertTrue(false)
+            XCTFail()
         }
     }
     
@@ -101,7 +105,7 @@ class SELoggerTest: XCTestCase {
         let uri = "/badAccess"
         let body = "Could not find file"
         let request = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: uri)
-                let stdOut = "HTTP/\(request.version.major).\(request.version.minor) \(status) FileNotFound\n\n\(body)"
+        let stdOut = "HTTP/\(request.version.major).\(request.version.minor) \(status) FileNotFound\n\n\(body)"
         
         SELogger.log(request: request, ip: ip, stdOut: stdOut)
 
@@ -110,7 +114,7 @@ class SELoggerTest: XCTestCase {
             XCTAssertEqual(response, str)
         }
         else {
-            XCTAssertTrue(false)
+            XCTFail()
         }
     }
     
@@ -133,7 +137,7 @@ class SELoggerTest: XCTestCase {
             XCTAssertEqual(response, str)
         }
         else {
-            XCTAssertTrue(false)
+            XCTFail()
         }
     }
     
@@ -144,7 +148,7 @@ class SELoggerTest: XCTestCase {
         
         let ip = "127.0.0.1"
         let status = "200"
-        let uri = "/hello"
+        let uri = "/"
         let body = "Body of message"
         let request = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: uri)
         let stdOut = "HTTP/\(request.version.major).\(request.version.minor) \(status) OK\n\(body)"
@@ -152,11 +156,11 @@ class SELoggerTest: XCTestCase {
         SELogger.log(request: request, ip: ip, stdOut: stdOut)
         
         if let data = fh.writeData, let response = String(data: data, encoding: .utf8) {
-            let str = "Unexpected crash with string: \(stdOut)\n"
+            let str = "Could not get body. StdOut: \(stdOut)\n"
             XCTAssertEqual(response, str)
         }
         else {
-            XCTAssertTrue(false)
+            XCTFail()
         }
     }
     
@@ -179,9 +183,7 @@ class SELoggerTest: XCTestCase {
             XCTAssertEqual(response, str)
         }
         else {
-            XCTAssertTrue(false)
+            XCTFail()
         }
     }
-    
-    
 }
