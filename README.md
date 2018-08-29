@@ -1,4 +1,4 @@
-[![SwiftEngine](https://i.imgur.com/vq9BrIn.jpg?1)](https://swiftengine.io)
+[![SwiftEngine](https://i.imgur.com/X6hLAmn.jpg)](https://swiftengine.io)
 
 ### _We work for :star2:’s and :fork_and_knife:’s ... please Star our repo_
 
