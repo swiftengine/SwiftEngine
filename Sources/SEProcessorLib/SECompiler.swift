@@ -134,36 +134,28 @@ public class SECompiler {
         // Get lines of the file
         let lines = content.components(separatedBy: .newlines)
         for (lineNum, line) in lines.enumerated() {
-            // Starts with the require key
-            if line.starts(with: SEGlobals.REQUIRE_KEY) {
+            // Get the required file, make sure it's not already in the required list
+            if let file = SECompiler.getRequiredFile(line), (!SECompiler.requireList.contains(file)) {
                 
-                // Split components to get the require file name
-                let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
-                for file in lineComponents {
-                    // File isn't empty and it's not in the require list
-                    if (!file.isEmpty) && (!SECompiler.requireList.contains(file)) {
-                        
-                        // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
-                        var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
-                        if !file.starts(with: "/") {
-                            requirePath += "\(SECompiler.relativePath!)"
-                        }
-                        requirePath += "\(file)"
-                        
-                        // Add require to the list
-                        SECompiler.requireList.insert(requirePath)
-                        
-                        do {
-                            // Recurse
-                            let fileContents = try SECompiler.getFileContents(path: requirePath)
-                            SECompiler.generateRequireList(path: path, content: fileContents)
-                        }
-                        catch {
-                            let errorStr = "\n\(path):\(lineNum+1):\(1): error: could not find file \(file)\n\(line)\n^\n"
-                            let output = SECompiler.getErrors(errorStr)
-                            SEResponse.outputHTML(status: 404, title: "File Not Found", style: SECompiler.lineNumberStyle, body: output, compilationError: true)
-                        }
-                    }
+                // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
+                var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
+                if !file.starts(with: "/") {
+                    requirePath += "\(SECompiler.relativePath!)"
+                }
+                requirePath += "\(file)"
+                
+                // Add require to the list
+                SECompiler.requireList.insert(requirePath)
+                
+                do {
+                    // Recurse
+                    let fileContents = try SECompiler.getFileContents(path: requirePath)
+                    SECompiler.generateRequireList(path: path, content: fileContents)
+                }
+                catch {
+                    let errorStr = "\n\(path):\(lineNum+1):\(1): error: could not find file \(file)\n\(line)\n^\n"
+                    let output = SECompiler.getErrors(errorStr)
+                    SEResponse.outputHTML(status: 404, title: "File Not Found", style: SECompiler.lineNumberStyle, body: output, compilationError: true)
                 }
             }
         }
