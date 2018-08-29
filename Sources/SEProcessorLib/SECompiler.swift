@@ -82,10 +82,6 @@ public class SECompiler {
 	
     private class func compileFile(fileUri : String) {
         
-        //dump("Binary Location: \(binaryCompilationLocation)\nRelative Path: \(relativePath!)\nExecutable: \(executableName!)\nFull exe path: \(fullExecutablePath)", true)
-        
-        //SECompiler.printEnvVars(ProcessInfo.processInfo.environment)
-        
         var args = [
 			SECompiler.swiftc, 
                 "-v", 
@@ -119,41 +115,18 @@ public class SECompiler {
         
         // Add SECore objects
         args.append(self.seCoreObjectList!)
-        
-        //printEnvVars(ProcessInfo.processInfo.environment)
-        
-        //dump(SECompiler.relativePath!)
-        //dump(SECompiler.fullExecutablePath, true)
-        
-        
-        // let cmd = args.joined(separator: " ")
-        // print("cmd: \(cmd)")
 
 		// Run the executable
         let newArgs = args //["/usr/bin/env"]
         let (_, stdErr, status) = SEShell.run(newArgs)
+        
+        // Error
         if (status != 0) {
             let output = SECompiler.getErrors(stdErr)
             SEResponse.outputHTML(status: 500, title: nil, style: SECompiler.lineNumberStyle, body: output, compilationError: true)
         }
         
-
 	}
-    
-    
-    
-//    // Get's the necessary SECore objects from the specified path
-//    private class func getSECoreObjectsList() -> [String] {
-//        if let contents = try? SECompiler.getFileContents(path: SECompiler.pathToSECoreObjectsList) {
-//            var ret = [String]()
-//            var files = contents.components(separatedBy: .newlines)
-//            files = files.filter(){ $0 != ""}
-//            ret.append(contentsOf: files)
-//            return ret
-//        }
-//        return [String]()
-//    }
-    
     
 
     // DFS-search starting with the entry point file to generate the list of required files
@@ -161,37 +134,98 @@ public class SECompiler {
         // Get lines of the file
         let lines = content.components(separatedBy: .newlines)
         for (lineNum, line) in lines.enumerated() {
-            // Starts with the require key
-            if line.starts(with: SEGlobals.REQUIRE_KEY) {
+            // Get the required file, make sure it's not already in the required list
+            if let file = SECompiler.getRequiredFile(line), (!SECompiler.requireList.contains(file)) {
                 
-                // Split components to get the require file name
-                let lineComponents = line.components(separatedBy: SEGlobals.REQUIRE_KEY)
-                for file in lineComponents {
-                    // File isn't empty and it's not in the require list
-                    if (!file.isEmpty) && (!SECompiler.requireList.contains(file)) {
-                        
-                        // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
-                        var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
-                        if !file.starts(with: "/") {
-                            requirePath += "\(SECompiler.relativePath!)"
-                        }
-                        requirePath += "\(file)"
-                        
-                        // Add require to the list
-                        SECompiler.requireList.insert(requirePath)
-                        
-                        do {
-                            // Recurse
-                            let fileContents = try SECompiler.getFileContents(path: requirePath)
-                            SECompiler.generateRequireList(path: path, content: fileContents)
-                        }
-                        catch {
-                            let errorStr = "\n\(path):\(lineNum+1):\(1): error: could not find file \(file)\n\(line)\n^\n"
-                            let output = SECompiler.getErrors(errorStr)
-                            SEResponse.outputHTML(status: 404, title: "File Not Found", style: SECompiler.lineNumberStyle, body: output, compilationError: true)
-                        }
-                    }
+                // If the require starts with '/' then path is DOCUMENT_ROOT; else, it's down the full path
+                var requirePath = "\(SEGlobals.DOCUMENT_ROOT)"
+                if !file.starts(with: "/") {
+                    requirePath += "\(SECompiler.relativePath!)"
                 }
+                requirePath += "\(file)"
+                
+                // Add require to the list
+                SECompiler.requireList.insert(requirePath)
+                
+                do {
+                    // Recurse
+                    let fileContents = try SECompiler.getFileContents(path: requirePath)
+                    SECompiler.generateRequireList(path: path, content: fileContents)
+                }
+                catch {
+                    let errorStr = "\n\(path):\(lineNum+1):\(1): error: could not find file \(file)\n\(line)\n^\n"
+                    let output = SECompiler.getErrors(errorStr)
+                    SEResponse.outputHTML(status: 404, title: "File Not Found", style: SECompiler.lineNumberStyle, body: output, compilationError: true)
+                }
+            }
+        }
+    }
+    
+    
+    public class func getRequiredFile(_ line: String) -> String? {
+        let requireLength = SEGlobals.REQUIRE_KEY.count
+        let lineLength = line.count
+        
+        // Make sure the line has text
+        guard lineLength > 0 else { return nil }
+        
+        // Make sure the line is longer than the require line
+        guard lineLength > requireLength else { return nil }
+        
+        // Make line from file lowercased
+        let newLine = line.lowercased()
+        
+        // Start indices
+        let lineStartIndex = newLine.startIndex
+        let requireStartIndex = SEGlobals.REQUIRE_KEY.startIndex
+        
+        // Index offsets
+        var lineOffset = 0
+        var requireOffset = 0
+        
+        while (true) {
+            // Check letters
+            let lineLetter = newLine[newLine.index(lineStartIndex, offsetBy: lineOffset)]
+            let requireLetter = SEGlobals.REQUIRE_KEY[SEGlobals.REQUIRE_KEY.index(requireStartIndex, offsetBy: requireOffset)]
+            
+            // Same letter, increment offsets and continue
+            if lineLetter == requireLetter {
+                lineOffset += 1
+                requireOffset += 1
+            }
+            // Different letters
+            else {
+                // If one letter is space, increment offset continue
+                var space = false
+                if lineLetter == " " {
+                    space = true
+                    lineOffset += 1
+                }
+                if requireLetter == " " {
+                    space = true
+                    requireOffset += 1
+                }
+                // Just different letters, return nil
+                if (!space) {
+                    return nil
+                }
+            }
+            
+            // Line doesn't contain require directive
+            if lineOffset >= lineLength {
+                return nil
+            }
+            // Found a require directive
+            if requireOffset >= requireLength {
+                let currIndex = line.index(lineStartIndex, offsetBy: lineOffset)
+                let requiredFile = line[currIndex..<line.endIndex].trimmingCharacters(in: .whitespaces).components(separatedBy: " ")[0]
+                //if requiredFile.contains(" ") {
+                    //return String(requiredFile.components(separatedBy: " ")[0])
+                //}
+                if requiredFile.isEmpty {
+                    return nil
+                }
+                return String(requiredFile)
             }
         }
     }

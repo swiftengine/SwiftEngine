@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for visiting our repository and for your interest in helping improve SwiftEngine! We appreciate feedback of any kind, the only thing we asking of you is that you follow our [Code of Conduct](#code-of-conduct). 
+Thank you for visiting our repository and for your interest in helping improve SwiftEngine! We appreciate feedback of any kind, the only thing we asking of you is that you follow our [Code of Conduct](/CODE_OF_CONDUCT.md). 
 
 Please choose the option below that fits you best:
 
@@ -40,7 +40,6 @@ Steps to Reproduce:
 $ uname -a 
 Darwin Kernel Version 17.7.0: Thu Jun 21 22:53:14 PDT 2018; root:xnu-4570.71.2~1/RELEASE_X86_64 x86_64
 ```
-
 
 
 We thank you for taking the time to help improve SwiftEngine!
