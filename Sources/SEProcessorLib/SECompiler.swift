@@ -211,17 +211,14 @@ public class SECompiler {
                 }
             }
             
-            // Line doesn't contain require directive
+            // Went through whole line, doesn't contain require directive
             if lineOffset >= lineLength {
                 return nil
             }
-            // Found a require directive
+            // Went through the whole require string; found a require directive
             if requireOffset >= requireLength {
                 let currIndex = line.index(lineStartIndex, offsetBy: lineOffset)
                 let requiredFile = line[currIndex..<line.endIndex].trimmingCharacters(in: .whitespaces).components(separatedBy: " ")[0]
-                //if requiredFile.contains(" ") {
-                    //return String(requiredFile.components(separatedBy: " ")[0])
-                //}
                 if requiredFile.isEmpty {
                     return nil
                 }
