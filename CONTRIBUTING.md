@@ -12,6 +12,7 @@ Please follow the steps below to contribute:
 
 - Fork our repo
 - Create a feature branch off the `dev` branch titled `dev-xxx` where `xxx` is the feature you are adding or fixing
+- (optional) Generate an Xcode project to work within via the command `swift package generate-xcodeproj`
 - Make your awesome change(s)  
 - Commit your code with a descriptive message
 - Submit a pull request against the `dev` branch
