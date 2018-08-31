@@ -65,12 +65,6 @@ class SECompilerTest: XCTestCase {
         }
     }
     
-    // Three forward slashes rather than two
-    func testRequireInvalidCommentFormat() {
-        let line = "///se: require hello.swift"
-        XCTAssertNil(SECompiler.getRequiredFile(line))
-    }
-    
     // No spaces at all
     func testRequireNoSpaces() {
         let line = "//se:requirehello.swift"
@@ -99,5 +93,22 @@ class SECompilerTest: XCTestCase {
         XCTAssertNil(SECompiler.getRequiredFile(line))
     }
     
+    // Three forward slashes rather than two
+    func testRequireInvalidCommentFormat() {
+        let line = "///se: require hello.swift"
+        XCTAssertNil(SECompiler.getRequiredFile(line))
+    }
+    
+    // Partial syntax
+    func testRequirePartialDirective() {
+        let line = "//se: r"
+        XCTAssertNil(SECompiler.getRequiredFile(line))
+    }
+    
+    // Blank line
+    func testRequireEmptyString() {
+        let line = ""
+        XCTAssertNil(SECompiler.getRequiredFile(line))
+    }
     
 }
